@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define BLACK_HUMAN_VS_AI
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,8 +65,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	private Dictionary<GameSerializationType, IGameSerializer> serializersByType;
 	private GameSerializationType selectedSerializationType = GameSerializationType.FEN;
 
-	private IUCIEngine uciEngine;
-	
+	private IUCIEngine whiteUciEngine;
+	private IUCIEngine blackUciEngine;
+
 	public void Start() {
 		VisualPiece.VisualPieceMoved += OnPieceMoved;
 
@@ -83,11 +85,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	}
 
 	private void OnDestroy() {
-		uciEngine?.ShutDown();
+		whiteUciEngine?.ShutDown();
+		blackUciEngine?.ShutDown();
 	}
-	
+
 #if AI_TEST
 	public async void StartNewGame(bool isWhiteAI = true, bool isBlackAI = true) {
+#elif WHITE_HUMAN_VS_AI
+	public async void StartNewGame(bool isWhiteAI = false, bool isBlackAI = true) {
+#elif BLACK_HUMAN_VS_AI
+	public async void StartNewGame(bool isWhiteAI = true, bool isBlackAI = false) {
 #else
 	public async void StartNewGame(bool isWhiteAI = false, bool isBlackAI = false) {
 #endif
@@ -97,16 +104,29 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		this.isBlackAI = isBlackAI;
 
 		if (isWhiteAI || isBlackAI) {
-			if (uciEngine == null) {
-				uciEngine = new MockUCIEngine();
-				uciEngine.Start();
+			if (isWhiteAI) {
+				if (whiteUciEngine == null)
+				{
+					whiteUciEngine = new MockUCIEngine();
+					whiteUciEngine.Start();
+				}
+				await whiteUciEngine.SetupNewGame(game);
+			}
+
+			if (isBlackAI)
+			{
+				if (blackUciEngine == null)
+				{
+					blackUciEngine = new MockUCIEngine();
+					blackUciEngine.Start();
+				}
+				await blackUciEngine.SetupNewGame(game);
 			}
 			
-			await uciEngine.SetupNewGame(game);
 			NewGameStartedEvent?.Invoke();
 
 			if (isWhiteAI) {
-				Movement bestMove = await uciEngine.GetBestMove(10_000);
+				Movement bestMove = await whiteUciEngine.GetBestMove(10_000);
 				DoAIMove(bestMove);
 			}
 		} else {
@@ -239,11 +259,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 
 		bool gameIsOver = game.HalfMoveTimeline.TryGetCurrent(out HalfMove lastHalfMove)
 		                  && lastHalfMove.CausedStalemate || lastHalfMove.CausedCheckmate;
-		if (!gameIsOver
-			&& (SideToMove == Side.White && isWhiteAI
-			    || SideToMove == Side.Black && isBlackAI)
-		) {
-			Movement bestMove = await uciEngine.GetBestMove(10_000);
+		if (gameIsOver)
+			return;
+		if(SideToMove == Side.White && isWhiteAI)	    
+		{
+			Movement bestMove = await whiteUciEngine.GetBestMove(10_000);
+			DoAIMove(bestMove);
+		}
+		else if (SideToMove == Side.Black && isBlackAI)
+		{
+			Movement bestMove = await blackUciEngine.GetBestMove(10_000);
 			DoAIMove(bestMove);
 		}
 	}

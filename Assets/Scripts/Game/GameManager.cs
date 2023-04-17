@@ -1,10 +1,14 @@
 ﻿#define BLACK_HUMAN_VS_AI
+//#define WHITE_HUMAN_VS_AI
+//#define AI_TEST
+#define DEBUG_VIEW
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityChess;
 using UnityChess.Engine;
+using UnityChess.StrategicAI;
 using UnityEngine;
 
 public class GameManager : MonoBehaviourSingleton<GameManager> {
@@ -107,7 +111,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			if (isWhiteAI) {
 				if (whiteUciEngine == null)
 				{
-					whiteUciEngine = new MockUCIEngine();
+					//whiteUciEngine = new MockUCIEngine();
+					whiteUciEngine = new AI_UCIEngine1();
 					whiteUciEngine.Start();
 				}
 				await whiteUciEngine.SetupNewGame(game);
@@ -117,7 +122,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			{
 				if (blackUciEngine == null)
 				{
-					blackUciEngine = new MockUCIEngine();
+					//blackUciEngine = new MockUCIEngine();
+					blackUciEngine = new AI_UCIEngine1();
 					blackUciEngine.Start();
 				}
 				await blackUciEngine.SetupNewGame(game);

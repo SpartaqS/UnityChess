@@ -17,6 +17,16 @@ public class VisualPiece : MonoBehaviour {
 	private List<GameObject> potentialLandingSquares;
 	private Transform thisTransform;
 
+	private void OnEnable()
+	{
+		Debug.Log("I am enabled: "+CurrentSquare.ToString());
+	}
+
+	private void OnDisable()
+	{
+		Debug.Log("I am disabled: " + CurrentSquare.ToString());
+	}
+
 	private void Start() {
 		potentialLandingSquares = new List<GameObject>();
 		thisTransform = transform;

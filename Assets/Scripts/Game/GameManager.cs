@@ -111,8 +111,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			if (isWhiteAI) {
 				if (whiteUciEngine == null)
 				{
-					whiteUciEngine = new MockUCIEngine();
-					//whiteUciEngine = new AI_UCIEngine1();
+					//whiteUciEngine = new MockUCIEngine();
+					whiteUciEngine = new AI_UCIEngine1();
 					whiteUciEngine.Start();
 				}
 				await whiteUciEngine.SetupNewGame(game);
@@ -123,7 +123,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				if (blackUciEngine == null)
 				{
 					//blackUciEngine = new MockUCIEngine();
-					blackUciEngine = new AI_UCIEngine1();
+					blackUciEngine = new AI_UCIEngine1(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 					blackUciEngine.Start();
 				}
 				await blackUciEngine.SetupNewGame(game);

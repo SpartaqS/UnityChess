@@ -1,6 +1,6 @@
 ﻿//#define BLACK_HUMAN_VS_AI
-//#define WHITE_HUMAN_VS_AI
-#define AI_TEST
+#define WHITE_HUMAN_VS_AI
+//#define AI_TEST
 #define DEBUG_VIEW
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviourSingleton<GameManager> {
 	public static event Action NewGameStartedEvent;
-	public static event Action GameEndedEvent;
+	public static event Action<Side> GameEndedEvent; // the winner of the game is broadcasted
 	public static event Action GameResetToHalfMoveEvent;
 	public static event Action MoveExecutedEvent;
 	
@@ -104,8 +104,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		if (typeof(MonoBehaviour).IsAssignableFrom(aiType))
 		{
 			GameObject aiGameObject = Instantiate(aiPrefab, transform);
-			MonoBehaviour monoBehaviour = (MonoBehaviour)aiGameObject.AddComponent(aiType);
-			engine = monoBehaviour as IUCIEngine;
+			// if Type is a MonoBehaviour, the component should be in the prefab
+			MonoBehaviour instantiatedMonoBehaviour = (MonoBehaviour)aiGameObject.GetComponent<IUCIEngine>();
+			engine = instantiatedMonoBehaviour as IUCIEngine;
 		}
 
 		return engine;
@@ -118,7 +119,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			return null;
 		}
 
-		aiType.ShutDown();
+		aiType.ShutDown(GameEndedEvent);
 		MonoBehaviour monoBehaviourAI = aiType as MonoBehaviour;
 		if (monoBehaviourAI != null)
 		{
@@ -151,7 +152,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
 				whiteUciEngine.Start();
-				await whiteUciEngine.SetupNewGame(game);
+				await whiteUciEngine.SetupNewGame(game, GameEndedEvent);
 			}
 
 			if (isBlackAI)
@@ -161,7 +162,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
 				blackUciEngine.Start();
-				await blackUciEngine.SetupNewGame(game);
+				await blackUciEngine.SetupNewGame(game, GameEndedEvent);
 			}
 			
 			NewGameStartedEvent?.Invoke();
@@ -202,7 +203,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 		if (latestHalfMove.CausedCheckmate || latestHalfMove.CausedStalemate) {
 			BoardManager.Instance.SetActiveAllPieces(false);
-			GameEndedEvent?.Invoke();
+
+			Side winnerSide = Side.None;
+			if (latestHalfMove.CausedCheckmate)
+			{
+				winnerSide = latestHalfMove.Piece.Owner;
+			} // otherwise it was a stalemate, therefore noone won
+			GameEndedEvent?.Invoke(winnerSide);
 		} else {
 			BoardManager.Instance.EnsureOnlyPiecesOfSideAreEnabled(SideToMove);
 		}

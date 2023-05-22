@@ -15,9 +15,10 @@ namespace UnityChess.StrategicAI
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game)
+		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent)
 		{
 			this.game = game;
+			// this AI does not care about gameEndedEvent
 			return Task.CompletedTask;
 		}
 		/// <summary>
@@ -84,13 +85,14 @@ namespace UnityChess.StrategicAI
 				bestMove = noncapturingMoves[0].Movement;
 			}
 
-			await Task.Delay(1000);
+			await Task.Delay(250);
 			return bestMove;
 		}
 
-		void IUCIEngine.ShutDown()
+		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
 		{
 			// nothing to do at shutdown
+			// this AI does not subsribe to gameEndedEvent
 		}
 
 		protected bool IsCapturingMove(Board board, Square endSquare)

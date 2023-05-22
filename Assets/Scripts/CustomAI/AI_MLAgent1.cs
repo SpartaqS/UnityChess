@@ -4,24 +4,46 @@ using UnityEngine;
 using UnityChess.Engine;
 using System.Threading.Tasks;
 using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
+using Unity.MLAgents.Actuators;
+using System;
 
 namespace UnityChess.StrategicAI
 {
 	public class AI_MLAgent1 : Agent,  IUCIEngine
 	{//TODO actually implement interfacing between Model and game
 		protected Game game;
-		
+		protected Movement selectedMovement = null;
+		Side controlledSide = Side.None;
 		void IUCIEngine.Start()
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game)
+		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent)
 		{
 			this.game = game;
+			gameEndedEvent += HandleGameEndEvent;
 			return Task.CompletedTask;
 		}
+
+		private void HandleGameEndEvent(Side winningSide)
+		{
+			if(winningSide == controlledSide)
+			{
+				AddReward(1000f);
+			}
+			else if (winningSide == Side.None)
+			{
+				AddReward(0f);
+			}
+			else // the other player has won
+			{
+				AddReward(-1000f);
+			}
+		}
+
 		/// <summary>
-		/// dumb but simple "strategy": move the leftmost piece, if can capture: must capture
+		/// ask the Agent's model for a decision and then get it
 		/// </summary>
 		/// <param name="timeoutMS"></param>
 		/// <returns></returns>
@@ -33,130 +55,147 @@ namespace UnityChess.StrategicAI
 			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
 				return null;
 
-			Side currentSide = currentConditions.SideToMove;
-
-
-			Movement bestMove = null;
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
-			bool isCapturePossible = false;
-			List<MovementWithSide> capturingMoves = new List<MovementWithSide>();
-			List<MovementWithSide> noncapturingMoves = new List<MovementWithSide>();
-			// capturing is most important: collect capturing moves
-			foreach (Piece piece in possibleMovesPerPiece.Keys)
-			{
-				foreach (Movement move in possibleMovesPerPiece[piece].Values)
-				{
-					if (piece is Pawn)
-					{
-						if (move is EnPassantMove)
-						{
-							isCapturePossible = true;
-							capturingMoves.Add(new MovementWithSide(currentSide, move));
-							continue; // en passant cannot end in promotion, but is a capturing move
-						}
-						if (move is PromotionMove)
-						{// pawn promotes: pick a promotion for it
-							(move as PromotionMove).SetPromotionPiece(new Queen(currentSide));
-						}
-
-					}
-
-					// piece captures
-					if (IsCapturingMove(currentBoard, move.End))
-					{
-						isCapturePossible = true;
-						capturingMoves.Add(new MovementWithSide(currentSide, move));
-						continue;
-					}
-					// piece cannot capture
-					noncapturingMoves.Add(new MovementWithSide(currentSide, move));
-				}
-			}
-
-			if (isCapturePossible)
-			{
-				capturingMoves.Sort(new MovementWithSideComparer());
-				bestMove = capturingMoves[0].Movement;
-			}
-			else
-			{
-				noncapturingMoves.Sort(new MovementWithSideComparer());
-				bestMove = noncapturingMoves[0].Movement;
-			}
-
-			await Task.Delay(1000);
+			controlledSide = currentConditions.SideToMove;
+			selectedMovement = null;
+			RequestDecision();
+			//TODO implement timeout
+			await Task.Run(async () => { while (selectedMovement == null) await Task.Delay(10); });
+			Movement bestMove = selectedMovement;
 			return bestMove;
 		}
 
-		void IUCIEngine.ShutDown()
+		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
 		{
+			gameEndedEvent -= HandleGameEndEvent;
+			EndEpisode();
 			// nothing to do at shutdown
 		}
 
-		protected bool IsCapturingMove(Board board, Square endSquare)
+		public override void OnActionReceived(ActionBuffers actions)
 		{
-			return board[endSquare] is Piece;
+			base.OnActionReceived(actions);
+
+			int startCol = actions.DiscreteActions[0];
+			int startRow = actions.DiscreteActions[1];
+			int endCol = actions.DiscreteActions[3];
+			int endRow = actions.DiscreteActions[4];
+			int promotionPieceInt = actions.DiscreteActions[5];
+
+			Square startSquare = new Square(startCol, startRow);
+			Square endSquare = new Square(endCol, endRow);
+			Piece promotionPiece = null;
+
+			
+			if (promotionPieceInt != 0)
+			{
+				switch ((PieceEnum)(promotionPieceInt + 1))
+				{
+					case PieceEnum.WhiteRook:
+						promotionPiece = new Rook(controlledSide);
+						break;
+					case PieceEnum.WhiteKnight:
+						promotionPiece = new Knight(controlledSide);
+						break;
+					case PieceEnum.WhiteBishop:
+						promotionPiece = new Bishop(controlledSide);
+						break;
+					case PieceEnum.WhiteQueen:
+						promotionPiece = new Bishop(controlledSide);
+						break;
+				}
+			}
+
+			Movement chosenMove;
+			if (promotionPiece != null)
+			{
+				chosenMove = new PromotionMove(startSquare, endSquare);
+				(chosenMove as PromotionMove).SetPromotionPiece(promotionPiece);
+			}
+			else // non-promotion moves are checked by cheking start and end squares only, not their special types so we do not need to decide what move it is at this stage
+			{
+				chosenMove = new Movement(startSquare, endSquare);
+			}
+			// validate the move (for training purposes)
+			if (!game.TryGetLegalMove(startSquare, endSquare, out Movement move))
+			{// invalid move: try a different one / end the episode and add penalty (if first approach does not work)
+				Debug.Log($"Invalid Chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? "promotes to: {promotionPiece.ToString()}" : "")}");
+				RequestDecision();
+				return;
+			}
+
+			Debug.Log($"Chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? "promotes to: {promotionPiece.ToString()}" : "")}");
+			AddReward(1f);
+			selectedMovement = chosenMove;
 		}
 
-		/// <summary>
-		/// Assumes that MovementWithSide are of the same side
-		/// </summary>
-		public class MovementWithSideComparer : IComparer<MovementWithSide>
+		public override void CollectObservations(VectorSensor sensor)
 		{
-			// -1: y is earlier than x
-			// 1 : x is earlier than y
-			public int Compare(MovementWithSide x, MovementWithSide y)
+			base.CollectObservations(sensor);
+			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
 			{
-				Side side = x.Side;
-				if (x.Movement.Start.Rank < y.Movement.Start.Rank)
-				{
-					return side == Side.White ? 1 : -1; // white wants to move the frontmost units
-				}
-				else if (x.Movement.Start.Rank > y.Movement.Start.Rank)
-				{
-					return side == Side.White ? -1 : 1; // white wants to move the frontmost units
-				}
-				else
-				{   // check the start column (we want to move leftmost pieces first
-					if (x.Movement.Start.File < y.Movement.Start.File)
-					{
-						return 1;
-					}
-					else if (x.Movement.Start.File > y.Movement.Start.File)
-					{
-						return -1;
-					}
-					else
-					{
-						// choose move which travels more tiles
-						if(x.Distance < y.Distance)
-						{
-							return 1;
-						}
-						if (x.Distance > y.Distance)
-						{
-							return -1;
-						}
-						else
-						{
-							return 0;
-						}
-						}
-					}
+				throw new System.NullReferenceException("currentBoard is null");
 			}
+			// translate board matrix to a sequence of ints
+			for (int row = 1; row <= 8; row++)
+				for (int col = 1; col <= 8; col++)
+				{
+					Piece piece = currentBoard[new Square(col, row)];
+					if (piece == null)
+					{
+						sensor.AddObservation(0);
+						continue;
+					}
+
+					// if Piece is black, then its enum value is negative
+					int isBlackMultiplier = piece.Owner == Side.Black ? -1 :  1;
+					PieceEnum pieceEnum = PieceEnum.Empty;
+
+					switch (piece)
+					{
+						case Pawn:
+							pieceEnum = PieceEnum.WhitePawn;
+							break;
+						case Rook:
+							pieceEnum = PieceEnum.WhiteRook;
+							break;
+						case Knight:
+							pieceEnum = PieceEnum.WhiteKnight;
+							break;
+						case Bishop:
+							pieceEnum = PieceEnum.WhiteBishop;
+							break;
+						case Queen:
+							pieceEnum = PieceEnum.WhiteQueen;
+							break;
+						case King:
+							pieceEnum = PieceEnum.WhiteKing;
+							break;
+						default:
+							pieceEnum = PieceEnum.Empty;
+							break;
+					}
+
+					PieceEnum finalPieceEnum = (PieceEnum)((int)pieceEnum * isBlackMultiplier);
+					sensor.AddObservation((int)finalPieceEnum);
+				}
 		}
 
-		public class MovementWithSide
+		// enums for clearer debugging
+		protected enum PieceEnum
 		{
-			public readonly Side Side;
-			public readonly int Distance;
-			public readonly Movement Movement;
-			public MovementWithSide(Side side, Movement movement)
-			{
-				Side = side;
-				Distance = Mathf.Abs(movement.End.Rank - movement.Start.Rank) + Mathf.Abs(movement.End.File - movement.Start.File);
-				Movement = movement;
-			}
+			BlackKing = -6,
+			BlackQueen = -5,
+			BlackBishop = -4,
+			BlackKnight = -3,
+			BlackRook = -2,
+			BlackPawn = -1,
+			Empty = 0,
+			WhitePawn = 1,
+			WhiteRook = 2,
+			WhiteKnight = 3,
+			WhiteBishop = 4,
+			WhiteQueen = 5,
+			WhiteKing = 6
 		}
 
 	}

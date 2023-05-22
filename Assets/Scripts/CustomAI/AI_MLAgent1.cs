@@ -77,9 +77,9 @@ namespace UnityChess.StrategicAI
 
 			int startCol = actions.DiscreteActions[0];
 			int startRow = actions.DiscreteActions[1];
-			int endCol = actions.DiscreteActions[3];
-			int endRow = actions.DiscreteActions[4];
-			int promotionPieceInt = actions.DiscreteActions[5];
+			int endCol = actions.DiscreteActions[2];
+			int endRow = actions.DiscreteActions[3];
+			int promotionPieceInt = actions.DiscreteActions[4];
 
 			Square startSquare = new Square(startCol, startRow);
 			Square endSquare = new Square(endCol, endRow);
@@ -146,38 +146,42 @@ namespace UnityChess.StrategicAI
 						continue;
 					}
 
-					// if Piece is black, then its enum value is negative
-					int isBlackMultiplier = piece.Owner == Side.Black ? -1 :  1;
-					PieceEnum pieceEnum = PieceEnum.Empty;
-
-					switch (piece)
-					{
-						case Pawn:
-							pieceEnum = PieceEnum.WhitePawn;
-							break;
-						case Rook:
-							pieceEnum = PieceEnum.WhiteRook;
-							break;
-						case Knight:
-							pieceEnum = PieceEnum.WhiteKnight;
-							break;
-						case Bishop:
-							pieceEnum = PieceEnum.WhiteBishop;
-							break;
-						case Queen:
-							pieceEnum = PieceEnum.WhiteQueen;
-							break;
-						case King:
-							pieceEnum = PieceEnum.WhiteKing;
-							break;
-						default:
-							pieceEnum = PieceEnum.Empty;
-							break;
-					}
-
-					PieceEnum finalPieceEnum = (PieceEnum)((int)pieceEnum * isBlackMultiplier);
+					GetPieceEnum(piece, out PieceEnum finalPieceEnum);
 					sensor.AddObservation((int)finalPieceEnum);
 				}
+		}
+
+		private void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)
+		{
+			// if Piece is black, then its enum value is negative
+			int isBlackMultiplier = piece.Owner == Side.Black ? -1 : 1;
+			PieceEnum pieceEnum = PieceEnum.Empty;
+			switch (piece)
+			{
+				case Pawn:
+					pieceEnum = PieceEnum.WhitePawn;
+					break;
+				case Rook:
+					pieceEnum = PieceEnum.WhiteRook;
+					break;
+				case Knight:
+					pieceEnum = PieceEnum.WhiteKnight;
+					break;
+				case Bishop:
+					pieceEnum = PieceEnum.WhiteBishop;
+					break;
+				case Queen:
+					pieceEnum = PieceEnum.WhiteQueen;
+					break;
+				case King:
+					pieceEnum = PieceEnum.WhiteKing;
+					break;
+				default:
+					pieceEnum = PieceEnum.Empty;
+					break;
+			}
+
+			finalPieceEnum = (PieceEnum)((int)pieceEnum * isBlackMultiplier);
 		}
 
 		// enums for clearer debugging
@@ -198,5 +202,28 @@ namespace UnityChess.StrategicAI
 			WhiteKing = 6
 		}
 
+		/// <summary>
+		/// The Heuristic is the 'dumb' model for now
+		/// </summary>
+		/// <param name="actionsOut"></param>
+		public override void Heuristic(in ActionBuffers actionsOut)
+		{
+			base.Heuristic(actionsOut);
+			ActionSegment<int> discreteActions = actionsOut.DiscreteActions;
+
+			AI_UCIEngine1 aii_UCIEngine1 = new AI_UCIEngine1();
+			Movement move = aii_UCIEngine1.FindBestMove(game);
+			discreteActions[0] = move.Start.File;
+			discreteActions[1] = move.Start.Rank;
+			discreteActions[2] = move.End.File;
+			discreteActions[3] = move.End.Rank;
+			discreteActions[4] = 0;
+			if (move is PromotionMove)
+			{
+				Piece promotionPiece = (move as PromotionMove).PromotionPiece;
+				GetPieceEnum(promotionPiece, out PieceEnum pieceEnum);
+				discreteActions[4] = (int)pieceEnum;
+			}
+		}
 	}
 }

@@ -28,6 +28,13 @@ namespace UnityChess.StrategicAI
 		/// <returns></returns>
 		async Task<Movement> IUCIEngine.GetBestMove(int timeoutMS)
 		{
+			Movement bestMove = FindBestMove(game);
+			await Task.Delay(250);
+			return bestMove;
+		}
+
+		public Movement FindBestMove(Game game)
+		{
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 				return null;
 
@@ -84,8 +91,6 @@ namespace UnityChess.StrategicAI
 				noncapturingMoves.Sort(new MovementWithSideComparer());
 				bestMove = noncapturingMoves[0].Movement;
 			}
-
-			await Task.Delay(250);
 			return bestMove;
 		}
 

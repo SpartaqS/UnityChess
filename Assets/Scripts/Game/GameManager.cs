@@ -149,8 +149,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			{
 				DestroyAIPlayer(whiteUciEngine);
 				//whiteUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
-				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
+				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
 				whiteUciEngine.Start();
 				await whiteUciEngine.SetupNewGame(game, GameEndedEvent);
 			}
@@ -159,8 +159,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			{
 				DestroyAIPlayer(blackUciEngine);
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
-				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
+				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
+				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
 				blackUciEngine.Start();
 				await blackUciEngine.SetupNewGame(game, GameEndedEvent);
 			}

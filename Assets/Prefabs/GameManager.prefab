@@ -48,6 +48,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unityChessDebug: {fileID: 608673176574255946}
+  aiPrefab: {fileID: 2677195303227046809, guid: e84258929d01f6740b215363d31a87ff,
+    type: 3}
 --- !u!1001 &1534536629961339071
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -73,7 +75,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1488318648, guid: 83c7966038655f8408d2785254c8ed6b, type: 3}
       propertyPath: m_Value
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 751544840447012441, guid: 83c7966038655f8408d2785254c8ed6b,
         type: 3}
@@ -988,12 +990,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 38897352257dd8a4ab9a3421268f1c71, type: 3}
---- !u!224 &8410410115195109703 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 224939313174518342, guid: 38897352257dd8a4ab9a3421268f1c71,
-    type: 3}
-  m_PrefabInstance: {fileID: 8622390446834260737}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &608673176574255946 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9212838075112323147, guid: 38897352257dd8a4ab9a3421268f1c71,
@@ -1006,3 +1002,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d22632341a4c68042a1b0887bce20c1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!224 &8410410115195109703 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 224939313174518342, guid: 38897352257dd8a4ab9a3421268f1c71,
+    type: 3}
+  m_PrefabInstance: {fileID: 8622390446834260737}
+  m_PrefabAsset: {fileID: 0}

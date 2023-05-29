@@ -173,19 +173,26 @@ namespace UnityChess.StrategicAI
 				throw new System.NullReferenceException("currentBoard is null");
 			}
 			// translate board matrix to a sequence of ints
+			//string observationsStr = "\n";
 			for (int row = 1; row <= 8; row++)
+			{	
 				for (int col = 1; col <= 8; col++)
 				{
 					Piece piece = currentBoard[new Square(col, row)];
 					if (piece == null)
 					{
 						sensor.AddObservation(0);
+						//observationsStr += "0 ";
 						continue;
 					}
 
 					GetPieceEnum(piece, out PieceEnum finalPieceEnum);
 					sensor.AddObservation((int)finalPieceEnum);
+					//observationsStr += $"{(int)finalPieceEnum} ";
 				}
+				//observationsStr += "\n";
+			}
+			//Debug.Log("Observations collected:" + observationsStr);
 		}
 
 		private void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)

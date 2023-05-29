@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using UnityEngine.Events;
 
 namespace UnityChess.StrategicAI
 {
@@ -14,14 +15,26 @@ namespace UnityChess.StrategicAI
 		protected Game game;
 		protected Movement selectedMovement = null;
 		Side controlledSide = Side.None;
+		UnityEvent requestStartNewGame;
+		public override void OnEpisodeBegin()
+		{
+			base.OnEpisodeBegin();
+			requestStartNewGame.Invoke();
+		}
+		bool IUCIEngine.CanRequestRestart()
+		{
+			return true;
+		}
+
 		void IUCIEngine.Start()
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent)
+		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction startNewGameHandler)
 		{
 			this.game = game;
 			gameEndedEvent += HandleGameEndEvent;
+			requestStartNewGame.AddListener(startNewGameHandler);
 			return Task.CompletedTask;
 		}
 
@@ -29,15 +42,18 @@ namespace UnityChess.StrategicAI
 		{
 			if(winningSide == controlledSide)
 			{
-				AddReward(1000f);
+				AddReward(10000f);
+				EndEpisode();
 			}
 			else if (winningSide == Side.None)
 			{
-				AddReward(0f);
+				AddReward(-1000f);
+				EndEpisode();
 			}
 			else // the other player has won
 			{
-				AddReward(-1000f);
+				AddReward(-10000f);
+				EndEpisode();
 			}
 		}
 
@@ -66,6 +82,7 @@ namespace UnityChess.StrategicAI
 		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
 		{
 			gameEndedEvent -= HandleGameEndEvent;
+			requestStartNewGame.RemoveAllListeners();
 			EndEpisode();
 			// nothing to do at shutdown
 		}
@@ -119,6 +136,7 @@ namespace UnityChess.StrategicAI
 			if (!game.TryGetLegalMove(startSquare, endSquare, out Movement move))
 			{// invalid move: try a different one / end the episode and add penalty (if first approach does not work)
 				Debug.Log($"Invalid chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
+				EndEpisode();
 				RequestDecision();
 				return;
 			}
@@ -128,6 +146,7 @@ namespace UnityChess.StrategicAI
 			if (isLegalMoveAPromotionMove != isChosenMoveAPromotionMove)
 			{
 				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
+				EndEpisode();
 				RequestDecision();
 				return;
 			}

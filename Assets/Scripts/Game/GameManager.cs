@@ -12,6 +12,9 @@ using UnityChess.StrategicAI;
 using UnityEngine;
 
 public class GameManager : MonoBehaviourSingleton<GameManager> {
+	//GameManagerState gameManagerState = GameManagerState.gameNotStarted;
+	int aiAgentsRequieredRequestsToStartNewGame = 0;
+	int aiAgentsRequestingToStartNewGame = 1;
 	public static event Action NewGameStartedEvent;
 	public static event Action<Side> GameEndedEvent; // the winner of the game is broadcasted
 	public static event Action GameResetToHalfMoveEvent;
@@ -139,6 +142,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		return null;
 	}
 
+	private void HandleAIStartNewGameRequest()
+	{
+		aiAgentsRequestingToStartNewGame += 1;
+		Debug.LogWarning($"AI requested to start a new game [{aiAgentsRequestingToStartNewGame}/{aiAgentsRequieredRequestsToStartNewGame}]");
+		if (aiAgentsRequieredRequestsToStartNewGame != aiAgentsRequestingToStartNewGame)
+			return;
+
+		StartNewGame();
+	}
 
 #if AI_TEST
 	public async void StartNewGame(bool isWhiteAI = true, bool isBlackAI = true) {
@@ -149,11 +161,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 #else
 	public async void StartNewGame(bool isWhiteAI = false, bool isBlackAI = false) {
 #endif
+		//// do not start a game if we are starting
+		//if (gameManagerState == GameManagerState.gameStarting)
+		//	return;
+
 		game = new Game();
 
 		this.isWhiteAI = isWhiteAI;
 		this.isBlackAI = isBlackAI;
-
+		aiAgentsRequieredRequestsToStartNewGame = 0;
+		aiAgentsRequestingToStartNewGame = 0;
 		if (isWhiteAI || isBlackAI) {
 			if (isWhiteAI)
 			{
@@ -161,8 +178,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				//whiteUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+				if (whiteUciEngine.CanRequestRestart())
+				{
+					aiAgentsRequieredRequestsToStartNewGame += 1;
+				}
 				whiteUciEngine.Start();
-				await whiteUciEngine.SetupNewGame(game, GameEndedEvent);
+				await whiteUciEngine.SetupNewGame(game, GameEndedEvent, HandleAIStartNewGameRequest);
 			}
 
 			if (isBlackAI)
@@ -171,8 +192,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+				if (blackUciEngine.CanRequestRestart())
+				{
+					aiAgentsRequieredRequestsToStartNewGame += 1;
+				}
 				blackUciEngine.Start();
-				await blackUciEngine.SetupNewGame(game, GameEndedEvent);
+				await blackUciEngine.SetupNewGame(game, GameEndedEvent, HandleAIStartNewGameRequest);
 			}
 			
 			NewGameStartedEvent?.Invoke();
@@ -332,6 +357,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	}
 
 	private void DoAIMove(Movement move) {
+		if(move == null)
+		{
+			GameEndedEvent?.Invoke(Side.None);
+		}
 		GameObject movedPiece = BoardManager.Instance.GetPieceGOAtPosition(move.Start);
 		GameObject endSquareGO = BoardManager.Instance.GetSquareGOByPosition(move.End);
 		OnPieceMoved(
@@ -344,5 +373,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 
 	public bool HasLegalMoves(Piece piece) {
 		return game.TryGetLegalMovesForPiece(piece, out _);
+	}
+	
+	public enum GameManagerState // TODO ? Delete this?
+	{
+		gameNotStarted,
+		gameStarting,
+		gameInProgress,
+		gameFinished
 	}
 }

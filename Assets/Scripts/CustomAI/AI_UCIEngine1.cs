@@ -4,21 +4,26 @@ using UnityEngine;
 using UnityChess.Engine;
 using System.Threading.Tasks;
 using System.Linq;
+using UnityEngine.Events;
 
 namespace UnityChess.StrategicAI
 {
 	public class AI_UCIEngine1 : IUCIEngine
 	{
 		protected Game game;
-		
+		bool IUCIEngine.CanRequestRestart()
+		{
+			return false;
+		}
 		void IUCIEngine.Start()
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent)
+		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction startNewGameHandler)
 		{
 			this.game = game;
 			// this AI does not care about gameEndedEvent
+			// this AI does not request for the game to be restarted
 			return Task.CompletedTask;
 		}
 		/// <summary>

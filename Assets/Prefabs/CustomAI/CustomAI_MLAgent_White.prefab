@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6988187049015915799}
   - component: {fileID: 6401094795927459350}
   m_Layer: 0
-  m_Name: CustomAI_MLAgent
+  m_Name: CustomAI_MLAgent_White
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

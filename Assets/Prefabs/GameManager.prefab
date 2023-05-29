@@ -48,7 +48,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unityChessDebug: {fileID: 608673176574255946}
-  aiPrefab: {fileID: 2677195303227046809, guid: e84258929d01f6740b215363d31a87ff,
+  blackMLAgentAiPrefab: {fileID: 2677195303227046809, guid: 6d9bcd6e5e7da2143b2118eb56e27b2c,
+    type: 3}
+  whiteMLAgentAiPrefab: {fileID: 2677195303227046809, guid: e84258929d01f6740b215363d31a87ff,
     type: 3}
 --- !u!1001 &1534536629961339071
 PrefabInstance:

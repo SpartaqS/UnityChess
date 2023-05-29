@@ -1,6 +1,6 @@
 ﻿//#define BLACK_HUMAN_VS_AI
-#define WHITE_HUMAN_VS_AI
-//#define AI_TEST
+//#define WHITE_HUMAN_VS_AI
+#define AI_TEST
 #define DEBUG_VIEW
 using System;
 using System.Collections.Generic;
@@ -93,20 +93,30 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		DestroyAIPlayer(blackUciEngine);
 	}
 
-	[SerializeField] GameObject aiPrefab; //TEMP: use a dictionary or something to store correct prefabs for each ai
-	private IUCIEngine CreateAIPlayer(Type aiType)
+	[SerializeField] GameObject blackMLAgentAiPrefab; //TEMP: use a dictionary or something to store correct prefabs for each ai
+	[SerializeField] GameObject whiteMLAgentAiPrefab; //TEMP: use a dictionary or something to store correct prefabs for each ai
+	
+	private IUCIEngine CreateAIPlayer(Type aiType, Side side)
 	{
 		if (!typeof(IUCIEngine).IsAssignableFrom(aiType))
 			throw new Exception("aiType is not a IUCIEngine");
 
-		IUCIEngine engine = (IUCIEngine)Activator.CreateInstance(aiType);
+		if (side != Side.White && side != Side.Black)
+			throw new Exception("side is neither Black nor White");
+
+		IUCIEngine engine = null;
 
 		if (typeof(MonoBehaviour).IsAssignableFrom(aiType))
 		{
+			GameObject aiPrefab = side == Side.Black ? blackMLAgentAiPrefab : whiteMLAgentAiPrefab;
 			GameObject aiGameObject = Instantiate(aiPrefab, transform);
 			// if Type is a MonoBehaviour, the component should be in the prefab
 			MonoBehaviour instantiatedMonoBehaviour = (MonoBehaviour)aiGameObject.GetComponent<IUCIEngine>();
 			engine = instantiatedMonoBehaviour as IUCIEngine;
+		}
+		else
+		{
+			engine = (IUCIEngine)Activator.CreateInstance(aiType);
 		}
 
 		return engine;
@@ -150,7 +160,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				DestroyAIPlayer(whiteUciEngine);
 				//whiteUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
 				whiteUciEngine.Start();
 				await whiteUciEngine.SetupNewGame(game, GameEndedEvent);
 			}
@@ -160,7 +170,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				DestroyAIPlayer(blackUciEngine);
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1));
+				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
 				blackUciEngine.Start();
 				await blackUciEngine.SetupNewGame(game, GameEndedEvent);
 			}

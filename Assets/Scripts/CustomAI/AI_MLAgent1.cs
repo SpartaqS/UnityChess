@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
-using System;
 
 namespace UnityChess.StrategicAI
 {
@@ -81,8 +80,9 @@ namespace UnityChess.StrategicAI
 			int endRow = actions.DiscreteActions[3];
 			int promotionPieceInt = actions.DiscreteActions[4];
 
-			Square startSquare = new Square(startCol, startRow);
-			Square endSquare = new Square(endCol, endRow);
+			// get the picked Squares (MLAgent returnsvalues from 0 to 7, change them into form 1 to 8)
+			Square startSquare = new Square(startCol + 1, startRow + 1);
+			Square endSquare = new Square(endCol + 1, endRow + 1);
 			Piece promotionPiece = null;
 
 			
@@ -118,12 +118,22 @@ namespace UnityChess.StrategicAI
 			// validate the move (for training purposes)
 			if (!game.TryGetLegalMove(startSquare, endSquare, out Movement move))
 			{// invalid move: try a different one / end the episode and add penalty (if first approach does not work)
-				Debug.Log($"Invalid Chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? "promotes to: {promotionPiece.ToString()}" : "")}");
+				Debug.Log($"Invalid chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
+				RequestDecision();
+				return;
+			}
+			
+			bool isLegalMoveAPromotionMove = move is PromotionMove;
+			bool isChosenMoveAPromotionMove = chosenMove is PromotionMove;
+			if (isLegalMoveAPromotionMove != isChosenMoveAPromotionMove)
+			{
+				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
 				RequestDecision();
 				return;
 			}
 
-			Debug.Log($"Chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? "promotes to: {promotionPiece.ToString()}" : "")}");
+
+			Debug.Log($"Correct chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
 			AddReward(1f);
 			selectedMovement = chosenMove;
 		}
@@ -208,15 +218,17 @@ namespace UnityChess.StrategicAI
 		/// <param name="actionsOut"></param>
 		public override void Heuristic(in ActionBuffers actionsOut)
 		{
+			Debug.LogWarning($"{controlledSide} is using heuristics:");
 			base.Heuristic(actionsOut);
 			ActionSegment<int> discreteActions = actionsOut.DiscreteActions;
 
 			AI_UCIEngine1 aii_UCIEngine1 = new AI_UCIEngine1();
 			Movement move = aii_UCIEngine1.FindBestMove(game);
-			discreteActions[0] = move.Start.File;
-			discreteActions[1] = move.Start.Rank;
-			discreteActions[2] = move.End.File;
-			discreteActions[3] = move.End.Rank;
+			// Offset by -1 because MLAgent gives coordinates from 0 to 7 (not from 1 to 8)
+			discreteActions[0] = move.Start.File - 1;
+			discreteActions[1] = move.Start.Rank - 1;
+			discreteActions[2] = move.End.File - 1;
+			discreteActions[3] = move.End.Rank - 1;
 			discreteActions[4] = 0;
 			if (move is PromotionMove)
 			{

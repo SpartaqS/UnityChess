@@ -19,12 +19,12 @@ public class VisualPiece : MonoBehaviour {
 
 	private void OnEnable()
 	{
-		Debug.Log("I am enabled: "+CurrentSquare.ToString());
+		//Debug.Log("I am enabled: "+CurrentSquare.ToString());
 	}
 
 	private void OnDisable()
 	{
-		Debug.Log("I am disabled: " + CurrentSquare.ToString());
+		//Debug.Log("I am disabled: " + CurrentSquare.ToString());
 	}
 
 	private void Start() {

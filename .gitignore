@@ -93,3 +93,6 @@ UnityChess\.Test/UnityChessLib/obj/
 UnityChess\.Test/UnityChessLib/bin/Debug/
 UnityChess\.Test/UnityChessLib/bin/
 *.DotSettings
+
+# MLAgents virtual environment (create it using python39 and install from requirements.txt)
+venv/

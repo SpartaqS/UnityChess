@@ -17,7 +17,11 @@ namespace UnityChess.StrategicAI
 		Side controlledSide = Side.None;
 		UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
 		private void RequestRestartEndGame() { requestStartNewGame.Invoke(controlledSide, 1); }
-		private void RequestRestartTrainingFailure() { requestStartNewGame.Invoke(controlledSide, 2); }
+		private void RequestRestartTrainingFailure() 
+		{
+			AddReward(-1000f);
+			requestStartNewGame.Invoke(controlledSide, 2); 
+		}
 		public override void OnEpisodeBegin()
 		{
 			base.OnEpisodeBegin();
@@ -84,7 +88,7 @@ namespace UnityChess.StrategicAI
 		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
 		{
 			gameEndedEvent -= HandleGameEndEvent;
-			//requestStartNewGame.RemoveAllListeners();
+			requestStartNewGame.RemoveAllListeners();
 			EndEpisode();
 			// nothing to do at shutdown
 		}
@@ -139,8 +143,8 @@ namespace UnityChess.StrategicAI
 			{// invalid move: try a different one / end the episode and add penalty (if first approach does not work)
 				Debug.Log($"Invalid chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
 				//EndEpisode();
-				//RequestRestartTrainingFailure();
-				RequestDecision();
+				RequestRestartTrainingFailure();
+				//RequestDecision();
 				return;
 			}
 			
@@ -150,8 +154,8 @@ namespace UnityChess.StrategicAI
 			{
 				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
 				//EndEpisode();
-				//RequestRestartTrainingFailure();
-				RequestDecision();
+				RequestRestartTrainingFailure();
+				//RequestDecision();
 				return;
 			}
 

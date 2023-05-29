@@ -57,7 +57,7 @@ MonoBehaviour:
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 5022602860645237092, guid: 77bbcb14d577f0c499288dd5d165d3f5, type: 3}
   m_InferenceDevice: 0
-  m_BehaviorType: 2
+  m_BehaviorType: 0
   m_BehaviorName: BlackMLAgent
   TeamId: 0
   m_UseChildSensors: 1

@@ -1,7 +1,15 @@
-﻿//#define BLACK_HUMAN_VS_AI
+﻿// MLAgents definitions
+#define TRAIN_WHITE_AI
+//#define TRAIN_BLACK_AI
+//#define BLACK_HUMAN_VS_AI
 //#define WHITE_HUMAN_VS_AI
-#define AI_TEST
+//#define AI_TEST
 #define DEBUG_VIEW
+#if TRAIN_WHITE_AI
+#define AI_TEST
+#elif TRAIN_BLACK_AI
+#define AI_TEST
+#endif
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -151,7 +159,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	{
 		aiAgentsRequestingToStartNewGame += votingPower;
 		Debug.LogWarning($"{requestingSide} AI requested to start a new game (${votingPower}) [{aiAgentsRequestingToStartNewGame}/{aiAgentsRequieredRequestsToStartNewGame}]");
-		if (aiAgentsRequieredRequestsToStartNewGame != aiAgentsRequestingToStartNewGame)
+		if (aiAgentsRequieredRequestsToStartNewGame > aiAgentsRequestingToStartNewGame)
 			return;
 
 		StartNewGame();
@@ -181,9 +189,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		if (isWhiteAI || isBlackAI) {
 			if (isWhiteAI)
 			{
+#if TRAIN_WHITE_AI
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+#elif TRAIN_BLACK_AI
+				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
+#else
 				//whiteUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
+#endif
 				if (whiteUciEngine.CanRequestRestart())
 				{
 					aiAgentsRequieredRequestsToStartNewGame += 1;
@@ -194,9 +209,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 
 			if (isBlackAI)
 			{
+#if TRAIN_WHITE_AI
+				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.Black);
+#elif TRAIN_BLACK_AI
+				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+#else
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.Black);
+#endif
 				if (blackUciEngine.CanRequestRestart())
 				{
 					aiAgentsRequieredRequestsToStartNewGame += 1;

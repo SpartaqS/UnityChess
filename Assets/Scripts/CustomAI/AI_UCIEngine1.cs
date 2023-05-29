@@ -38,7 +38,7 @@ namespace UnityChess.StrategicAI
 			return bestMove;
 		}
 
-		public Movement FindBestMove(Game game)
+		public virtual Movement FindBestMove(Game game)
 		{
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 				return null;
@@ -52,8 +52,26 @@ namespace UnityChess.StrategicAI
 			Movement bestMove = null;
 			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
 			bool isCapturePossible = false;
-			List<MovementWithSide> capturingMoves = new List<MovementWithSide>();
-			List<MovementWithSide> noncapturingMoves = new List<MovementWithSide>();
+			List<MovementWithSide> capturingMoves, noncapturingMoves;
+			isCapturePossible = GetCaptureAndNonCaptureMoves(currentBoard, currentSide, possibleMovesPerPiece, isCapturePossible, out capturingMoves, out noncapturingMoves);
+
+			if (isCapturePossible)
+			{
+				capturingMoves.Sort(new MovementWithSideComparer());
+				bestMove = capturingMoves[0].Movement;
+			}
+			else
+			{
+				noncapturingMoves.Sort(new MovementWithSideComparer());
+				bestMove = noncapturingMoves[0].Movement;
+			}
+			return bestMove;
+		}
+
+		protected bool GetCaptureAndNonCaptureMoves(Board currentBoard, Side currentSide, Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece, bool isCapturePossible, out List<MovementWithSide> capturingMoves, out List<MovementWithSide> noncapturingMoves)
+		{
+			capturingMoves = new List<MovementWithSide>();
+			noncapturingMoves = new List<MovementWithSide>();
 			// capturing is most important: collect capturing moves
 			foreach (Piece piece in possibleMovesPerPiece.Keys)
 			{
@@ -86,17 +104,7 @@ namespace UnityChess.StrategicAI
 				}
 			}
 
-			if (isCapturePossible)
-			{
-				capturingMoves.Sort(new MovementWithSideComparer());
-				bestMove = capturingMoves[0].Movement;
-			}
-			else
-			{
-				noncapturingMoves.Sort(new MovementWithSideComparer());
-				bestMove = noncapturingMoves[0].Movement;
-			}
-			return bestMove;
+			return isCapturePossible;
 		}
 
 		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)

@@ -31,22 +31,22 @@ namespace UnityChess.StrategicAI
 			List<MovementWithSide> capturingMoves, noncapturingMoves;
 			isCapturePossible = GetCaptureAndNonCaptureMoves(currentBoard, currentSide, possibleMovesPerPiece, isCapturePossible, out capturingMoves, out noncapturingMoves);
 
-			List<MovementWithSide> allMovements = new List<MovementWithSide>();
+			//List<MovementWithSide> allMovements = new List<MovementWithSide>();
 
 			if (isCapturePossible)
 			{
 				if (Random.Range(0f, 1f) <= captureMoveChance)
 				{
 					capturingMoves.Sort(new MovementWithSideComparer());
-					allMovements.AddRange(capturingMoves);
-					bestMove = PickRandomMovement(allMovements);
+					//allMovements.AddRange(capturingMoves);
+					bestMove = PickRandomMovement(capturingMoves);
 					return bestMove;
 				}
 
 			}
 			noncapturingMoves.Sort(new MovementWithSideComparer());
-			allMovements.AddRange(noncapturingMoves);
-			bestMove = PickRandomMovement(allMovements);
+			//allMovements.AddRange(noncapturingMoves);
+			bestMove = PickRandomMovement(noncapturingMoves);
 			return bestMove;
 		}
 

@@ -6,9 +6,9 @@ namespace UnityChess.Engine {
 		bool CanRequestRestart();
 		void Start();
 		
-		void ShutDown(System.Action<Side> gameEndedEvent);
+		void ShutDown(UnityEvent<Side> gameEndedEvent);
 		
-		Task SetupNewGame(Game game, System.Action<Side> gameEndEvent, UnityAction<Side,int> startNewGameHandler);
+		Task SetupNewGame(Game game, UnityEvent<Side> gameEndEvent, UnityAction<Side,int> startNewGameHandler);
 		
 		Task<Movement> GetBestMove(int timeoutMS);
 	}

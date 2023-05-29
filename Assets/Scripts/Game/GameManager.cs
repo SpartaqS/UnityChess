@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	int aiAgentsRequieredRequestsToStartNewGame = 0;
 	int aiAgentsRequestingToStartNewGame = 1;
 	public static event Action NewGameStartedEvent;
-	public static event Action<Side> GameEndedEvent; // the winner of the game is broadcasted
+	public UnityEngine.Events.UnityEvent<Side> GameEndedEvent; // the winner of the game is broadcasted
 	public static event Action GameResetToHalfMoveEvent;
 	public static event Action MoveExecutedEvent;
 	

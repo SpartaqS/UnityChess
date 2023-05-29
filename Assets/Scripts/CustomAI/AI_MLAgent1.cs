@@ -36,10 +36,10 @@ namespace UnityChess.StrategicAI
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
+		Task IUCIEngine.SetupNewGame(Game game, UnityEvent<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
 		{
 			this.game = game;
-			gameEndedEvent += HandleGameEndEvent;
+			gameEndedEvent.AddListener(HandleGameEndEvent);
 			requestStartNewGame.AddListener(startNewGameHandler);
 			return Task.CompletedTask;
 		}
@@ -85,9 +85,9 @@ namespace UnityChess.StrategicAI
 			return bestMove;
 		}
 
-		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
+		void IUCIEngine.ShutDown(UnityEvent<Side> gameEndedEvent)
 		{
-			gameEndedEvent -= HandleGameEndEvent;
+			gameEndedEvent.RemoveListener(HandleGameEndEvent);
 			requestStartNewGame.RemoveAllListeners();
 			EndEpisode();
 			// nothing to do at shutdown
@@ -249,7 +249,7 @@ namespace UnityChess.StrategicAI
 			base.Heuristic(actionsOut);
 			ActionSegment<int> discreteActions = actionsOut.DiscreteActions;
 
-			AI_UCIEngine1 aii_UCIEngine1 = new AI_UCIEngine1();
+			AI_UCIEngine1 aii_UCIEngine1 = new AI_UCIEngineRandom1();
 			Movement move = aii_UCIEngine1.FindBestMove(game);
 			// Offset by -1 because MLAgent gives coordinates from 0 to 7 (not from 1 to 8)
 			discreteActions[0] = move.Start.File - 1;

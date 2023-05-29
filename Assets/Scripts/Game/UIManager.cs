@@ -24,7 +24,7 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
 	private void Start() {
 		GameManager.NewGameStartedEvent += OnNewGameStarted;
-		GameManager.GameEndedEvent += OnGameEnded;
+		GameManager.Instance.GameEndedEvent.AddListener(OnGameEnded);
 		GameManager.MoveExecutedEvent += OnMoveExecuted;
 		GameManager.GameResetToHalfMoveEvent += OnGameResetToHalfMove;
 		
@@ -52,9 +52,11 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	private void OnGameEnded(Side winningSide) {
 		if (winningSide == Side.None) {
 			resultText.text = "Draw.";
+			Debug.LogWarning("Game ended in a draw");
 		}
 		else { 
 			resultText.text = $"{winningSide} Wins!";
+			Debug.LogWarning($"Game ended with {winningSide} winning!");
 		}
 
 		resultText.gameObject.SetActive(true);

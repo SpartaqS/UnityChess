@@ -19,7 +19,7 @@ namespace UnityChess.StrategicAI
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
+		Task IUCIEngine.SetupNewGame(Game game, UnityEvent<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
 		{
 			this.game = game;
 			// this AI does not care about gameEndedEvent
@@ -107,7 +107,7 @@ namespace UnityChess.StrategicAI
 			return isCapturePossible;
 		}
 
-		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
+		void IUCIEngine.ShutDown(UnityEvent<Side> gameEndedEvent)
 		{
 			// nothing to do at shutdown
 			// this AI does not subsribe to gameEndedEvent

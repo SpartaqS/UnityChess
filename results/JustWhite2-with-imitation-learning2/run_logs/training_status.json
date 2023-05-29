@@ -1,0 +1,29 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 14516,
+                "file_path": "results\\JustWhite2-with-imitation-learning2\\WhiteMLAgent\\WhiteMLAgent-14516.onnx",
+                "reward": -998.03125,
+                "creation_time": 1685375575.996508,
+                "auxillary_file_paths": [
+                    "results\\JustWhite2-with-imitation-learning2\\WhiteMLAgent\\WhiteMLAgent-14516.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 14516,
+            "file_path": "results\\JustWhite2-with-imitation-learning2\\WhiteMLAgent.onnx",
+            "reward": -998.03125,
+            "creation_time": 1685375575.996508,
+            "auxillary_file_paths": [
+                "results\\JustWhite2-with-imitation-learning2\\WhiteMLAgent\\WhiteMLAgent-14516.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

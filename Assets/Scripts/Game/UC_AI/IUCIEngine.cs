@@ -8,7 +8,7 @@ namespace UnityChess.Engine {
 		
 		void ShutDown(System.Action<Side> gameEndedEvent);
 		
-		Task SetupNewGame(Game game, System.Action<Side> gameEndEvent, UnityAction startNewGameHandler);
+		Task SetupNewGame(Game game, System.Action<Side> gameEndEvent, UnityAction<Side,int> startNewGameHandler);
 		
 		Task<Movement> GetBestMove(int timeoutMS);
 	}

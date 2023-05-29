@@ -19,7 +19,7 @@ namespace UnityChess.StrategicAI
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction startNewGameHandler)
+		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
 		{
 			this.game = game;
 			// this AI does not care about gameEndedEvent

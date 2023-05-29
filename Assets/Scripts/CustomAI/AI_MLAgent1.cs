@@ -15,11 +15,13 @@ namespace UnityChess.StrategicAI
 		protected Game game;
 		protected Movement selectedMovement = null;
 		Side controlledSide = Side.None;
-		UnityEvent requestStartNewGame;
+		UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
+		private void RequestRestartEndGame() { requestStartNewGame.Invoke(controlledSide, 1); }
+		private void RequestRestartTrainingFailure() { requestStartNewGame.Invoke(controlledSide, 2); }
 		public override void OnEpisodeBegin()
 		{
 			base.OnEpisodeBegin();
-			requestStartNewGame.Invoke();
+			//requestStartNewGame.Invoke(controlledSide);
 		}
 		bool IUCIEngine.CanRequestRestart()
 		{
@@ -30,7 +32,7 @@ namespace UnityChess.StrategicAI
 		{
 			// nothing to do at start
 		}
-		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction startNewGameHandler)
+		Task IUCIEngine.SetupNewGame(Game game, System.Action<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
 		{
 			this.game = game;
 			gameEndedEvent += HandleGameEndEvent;
@@ -43,17 +45,17 @@ namespace UnityChess.StrategicAI
 			if(winningSide == controlledSide)
 			{
 				AddReward(10000f);
-				EndEpisode();
+				RequestRestartEndGame();
 			}
 			else if (winningSide == Side.None)
 			{
-				AddReward(-1000f);
-				EndEpisode();
+				AddReward(0f);
+				RequestRestartEndGame();
 			}
 			else // the other player has won
 			{
 				AddReward(-10000f);
-				EndEpisode();
+				RequestRestartEndGame();
 			}
 		}
 
@@ -82,7 +84,7 @@ namespace UnityChess.StrategicAI
 		void IUCIEngine.ShutDown(System.Action<Side> gameEndedEvent)
 		{
 			gameEndedEvent -= HandleGameEndEvent;
-			requestStartNewGame.RemoveAllListeners();
+			//requestStartNewGame.RemoveAllListeners();
 			EndEpisode();
 			// nothing to do at shutdown
 		}
@@ -136,7 +138,8 @@ namespace UnityChess.StrategicAI
 			if (!game.TryGetLegalMove(startSquare, endSquare, out Movement move))
 			{// invalid move: try a different one / end the episode and add penalty (if first approach does not work)
 				Debug.Log($"Invalid chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
-				EndEpisode();
+				//EndEpisode();
+				//RequestRestartTrainingFailure();
 				RequestDecision();
 				return;
 			}
@@ -146,7 +149,8 @@ namespace UnityChess.StrategicAI
 			if (isLegalMoveAPromotionMove != isChosenMoveAPromotionMove)
 			{
 				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
-				EndEpisode();
+				//EndEpisode();
+				//RequestRestartTrainingFailure();
 				RequestDecision();
 				return;
 			}

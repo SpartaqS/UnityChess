@@ -1,0 +1,51 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 42871,
+                "file_path": "results\\TwoAgents2\\WhiteMLAgent\\WhiteMLAgent-42871.onnx",
+                "reward": 1.0,
+                "creation_time": 1685361377.189459,
+                "auxillary_file_paths": [
+                    "results\\TwoAgents2\\WhiteMLAgent\\WhiteMLAgent-42871.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 42871,
+            "file_path": "results\\TwoAgents2\\WhiteMLAgent.onnx",
+            "reward": 1.0,
+            "creation_time": 1685361377.189459,
+            "auxillary_file_paths": [
+                "results\\TwoAgents2\\WhiteMLAgent\\WhiteMLAgent-42871.pt"
+            ]
+        }
+    },
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 32092,
+                "file_path": "results\\TwoAgents2\\BlackMLAgent\\BlackMLAgent-32092.onnx",
+                "reward": null,
+                "creation_time": 1685361378.0805876,
+                "auxillary_file_paths": [
+                    "results\\TwoAgents2\\BlackMLAgent\\BlackMLAgent-32092.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 32092,
+            "file_path": "results\\TwoAgents2\\BlackMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1685361378.0805876,
+            "auxillary_file_paths": [
+                "results\\TwoAgents2\\BlackMLAgent\\BlackMLAgent-32092.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

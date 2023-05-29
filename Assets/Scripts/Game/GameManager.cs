@@ -142,10 +142,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		return null;
 	}
 
-	private void HandleAIStartNewGameRequest()
+	/// <summary>
+	/// AI can request to start a new game
+	/// </summary>
+	/// <param name="requestingSide"></param>
+	/// <param name="votingPower"></param> use 1 to request after a game has ended, use 2 to reqest a reset during training
+	private void HandleAIStartNewGameRequest(Side requestingSide, int votingPower = 1)
 	{
-		aiAgentsRequestingToStartNewGame += 1;
-		Debug.LogWarning($"AI requested to start a new game [{aiAgentsRequestingToStartNewGame}/{aiAgentsRequieredRequestsToStartNewGame}]");
+		aiAgentsRequestingToStartNewGame += votingPower;
+		Debug.LogWarning($"{requestingSide} AI requested to start a new game (${votingPower}) [{aiAgentsRequestingToStartNewGame}/{aiAgentsRequieredRequestsToStartNewGame}]");
 		if (aiAgentsRequieredRequestsToStartNewGame != aiAgentsRequestingToStartNewGame)
 			return;
 
@@ -171,10 +176,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		this.isBlackAI = isBlackAI;
 		aiAgentsRequieredRequestsToStartNewGame = 0;
 		aiAgentsRequestingToStartNewGame = 0;
+		DestroyAIPlayer(whiteUciEngine);
+		DestroyAIPlayer(blackUciEngine);
 		if (isWhiteAI || isBlackAI) {
 			if (isWhiteAI)
 			{
-				DestroyAIPlayer(whiteUciEngine);
 				//whiteUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
@@ -188,7 +194,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 
 			if (isBlackAI)
 			{
-				DestroyAIPlayer(blackUciEngine);
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);

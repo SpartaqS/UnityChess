@@ -1,0 +1,29 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 26040,
+                "file_path": "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-26040.onnx",
+                "reward": -998.1614906832298,
+                "creation_time": 1687725408.4199815,
+                "auxillary_file_paths": [
+                    "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-26040.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 26040,
+            "file_path": "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent.onnx",
+            "reward": -998.1614906832298,
+            "creation_time": 1687725408.4199815,
+            "auxillary_file_paths": [
+                "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-26040.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

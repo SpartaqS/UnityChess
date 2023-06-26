@@ -9,15 +9,24 @@
                 "auxillary_file_paths": [
                     "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-26040.pt"
                 ]
+            },
+            {
+                "steps": 42409,
+                "file_path": "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-42409.onnx",
+                "reward": -999.0,
+                "creation_time": 1687797182.9252036,
+                "auxillary_file_paths": [
+                    "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-42409.pt"
+                ]
             }
         ],
         "final_checkpoint": {
-            "steps": 26040,
+            "steps": 42409,
             "file_path": "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent.onnx",
-            "reward": -998.1614906832298,
-            "creation_time": 1687725408.4199815,
+            "reward": -999.0,
+            "creation_time": 1687797182.9252036,
             "auxillary_file_paths": [
-                "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-26040.pt"
+                "results\\TrainOnlyWhiteMoreNeuronsAndLayers\\WhiteMLAgent\\WhiteMLAgent-42409.pt"
             ]
         }
     },

@@ -82,9 +82,9 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
 	public void OnElectionButton(int choice) => GameManager.Instance.ElectPiece((ElectedPiece)choice);
 
-	public void ResetGameToFirstHalfMove() => GameManager.Instance.ResetGameToHalfMoveIndex(0);
+	public void ResetGameToFirstHalfMove() => GameManager.Instance.ResetGameToHalfMoveIndex(-1); // "first" index is '0' instead of '-1' as UI does not handle resetting to the starting board
 
-	public void ResetGameToPreviousHalfMove() => GameManager.Instance.ResetGameToHalfMoveIndex(Math.Max(0, GameManager.Instance.LatestHalfMoveIndex - 1));
+	public void ResetGameToPreviousHalfMove() => GameManager.Instance.ResetGameToHalfMoveIndex(Math.Max(-1, GameManager.Instance.LatestHalfMoveIndex - 1)); // "first" index is '0' instead of '-1' as UI does not handle resetting to the starting board
 
 	public void ResetGameToNextHalfMove() => GameManager.Instance.ResetGameToHalfMoveIndex(Math.Min(GameManager.Instance.LatestHalfMoveIndex + 1, GameManager.Instance.HalfMoveTimeline.Count - 1));
 

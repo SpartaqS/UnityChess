@@ -4,7 +4,7 @@
 //#define BLACK_HUMAN_VS_AI
 //#define WHITE_HUMAN_VS_AI
 #define AI_TEST
-#define DEBUG_VIEW
+//#define DEBUG_VIEW
 #if TRAIN_WHITE_AI
 #define AI_TEST
 #elif TRAIN_BLACK_AI
@@ -24,10 +24,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	int aiAgentsRequieredRequestsToStartNewGame = 0;
 	int aiAgentsRequestingToStartNewGame = 1;
 	public static event Action NewGameStartedEvent;
-	public UnityEngine.Events.UnityEvent<Side> GameEndedEvent; // the winner of the game is broadcasted
+	public UnityEngine.Events.UnityEvent<Side> GameEndedEvent = new UnityEngine.Events.UnityEvent<Side>(); // the winner of the game is broadcasted
 	public static event Action GameResetToHalfMoveEvent;
 	public static event Action MoveExecutedEvent;
-	
+
 	public Board CurrentBoard {
 		get {
 			game.BoardTimeline.TryGetCurrent(out Board currentBoard);
@@ -68,7 +68,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		}
 	}
 
-
 	private readonly List<(Square, Piece)> currentPiecesBacking = new List<(Square, Piece)>();
 	
 	[SerializeField] private UnityChessDebug unityChessDebug;
@@ -90,8 +89,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			[GameSerializationType.FEN] = new FENSerializer(),
 			[GameSerializationType.PGN] = new PGNSerializer()
 		};
-		
-		StartNewGame();
+
+		if (startNewGameInStart)
+		{
+			StartNewGame();
+		}
 		
 #if DEBUG_VIEW
 		unityChessDebug.gameObject.SetActive(true);
@@ -107,8 +109,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	[SerializeField] GameObject blackMLAgentAiPrefab; //TEMP: use a dictionary or something to store correct prefabs for each ai
 	[SerializeField] GameObject whiteMLAgentAiPrefab; //TEMP: use a dictionary or something to store correct prefabs for each ai
 
+	[SerializeField] bool startNewGameInStart = false; // in tests we do not want to start a game when initializing the GameManager
 	[SerializeField] bool useCustomStartBoard = false;
-	[SerializeField] readonly (Square, Piece)[] customStartingPositionPieces = {
+	[SerializeField] (Square, Piece)[] customStartingPositionPieces = {
 			(new Square("e2"), new King(Side.White)),
 			
 
@@ -116,6 +119,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			(new Square("b6"), new King(Side.Black)),
 			(new Square("b7"), new Rook(Side.Black)),
 		};
+
+	// these two are used in tests
+	public bool UseCustomStartBoard { get => useCustomStartBoard; set => useCustomStartBoard = value; }
+	public (Square, Piece)[] CustomStartingPositionPieces { get => customStartingPositionPieces; set => customStartingPositionPieces = value; }
 
 	private IUCIEngine CreateAIPlayer(Type aiType, Side side)
 	{

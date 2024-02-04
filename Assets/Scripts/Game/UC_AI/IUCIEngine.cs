@@ -7,9 +7,18 @@ namespace UnityChess.Engine {
 		void Start();
 		
 		void ShutDown(UnityEvent<Side> gameEndedEvent);
-		
+	
 		Task SetupNewGame(Game game, UnityEvent<Side> gameEndEvent, UnityAction<Side,int> startNewGameHandler);
 		
 		Task<Movement> GetBestMove(int timeoutMS);
+	}
+
+	public interface IUCIEngineWithCustomSettings {
+		void ApplyCustomSettings(IUCIEngineCustomSettings customSettings);
+	}
+
+	public interface IUCIEngineCustomSettings
+	{
+
 	}
 }

@@ -126,6 +126,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 
 	private IUCIEngine CreateAIPlayer(Type aiType, Side side)
 	{
+		return CreateAIPlayer(aiType, side, null);
+	}
+	private IUCIEngine CreateAIPlayer(Type aiType, Side side, IUCIEngineCustomSettings customSettings)
+	{
 		if (!typeof(IUCIEngine).IsAssignableFrom(aiType))
 			throw new Exception("aiType is not a IUCIEngine");
 
@@ -145,6 +149,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		else
 		{
 			engine = (IUCIEngine)Activator.CreateInstance(aiType);
+		}
+
+		if (customSettings != null && typeof(IUCIEngineWithCustomSettings).IsAssignableFrom(aiType))
+		{
+			((IUCIEngineWithCustomSettings)engine).ApplyCustomSettings(customSettings);
 		}
 
 		return engine;

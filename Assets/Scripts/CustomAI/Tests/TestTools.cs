@@ -5,26 +5,33 @@ namespace TestTools
 {
     public class WaitUntilForSeconds : CustomYieldInstruction
     {
-        float timer;
+        float timeToStopAt;
         Func<bool> myChecker;
+        Action onTimeout;
 
-        public WaitUntilForSeconds(Func<bool> myChecker, float timeout)
+        public WaitUntilForSeconds(Func<bool> myChecker, float timeout, Action onTimeout)
         {
             this.myChecker = myChecker;
-            this.timer = timeout;
+            this.timeToStopAt = Time.unscaledTime + timeout;
+            this.onTimeout = onTimeout;
         }
 
+        public WaitUntilForSeconds(Func<bool> myChecker, float timeout) : this(myChecker, timeout, null) { }
         public override bool keepWaiting
         {
             get
             {
                 bool checkThisTurn = myChecker();
-                if (checkThisTurn || timer <= 0)
+                float currentTime = Time.unscaledTime;
+                if (checkThisTurn || currentTime >= timeToStopAt) // condition fulfilled or timeout time has been exceeded
                 {
+                    if (currentTime >= timeToStopAt && onTimeout != null)
+					{
+                        onTimeout();
+					}
                     return false;
                 }
 
-                timer -= Time.deltaTime;
                 return true;
             }
         }

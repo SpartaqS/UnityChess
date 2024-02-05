@@ -393,6 +393,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	private async void OnPieceMoved(Square movedPieceInitialSquare, Transform movedPieceTransform, Transform closestBoardSquareTransform, Piece promotionPiece = null) {
 		Square endSquare = new Square(closestBoardSquareTransform.name);
 
+		if (isGamePaused) // do not modify the game after it has been paused
+			return;
+
 		if (!game.TryGetLegalMove(movedPieceInitialSquare, endSquare, out Movement move)) {
 			movedPieceTransform.position = movedPieceTransform.parent.position;
 #if DEBUG_VIEW
@@ -454,7 +457,20 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	public bool HasLegalMoves(Piece piece) {
 		return game.TryGetLegalMovesForPiece(piece, out _);
 	}
-	
+
+	bool isGamePaused = false;
+	public void PauseGame()
+	{
+		isGamePaused = true;
+		//TODO: if current player is an AI, order it to cancel its current search
+	}
+
+	public void UnPauseGame()
+	{
+		isGamePaused = false;
+		//TODO: if current player is an AI, order it to move
+	}
+
 	public enum GameManagerState // TODO ? Delete this?
 	{
 		gameNotStarted,

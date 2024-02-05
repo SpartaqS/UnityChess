@@ -22,8 +22,8 @@ namespace UnityChess.StrategicAI.Test
 		//TODO: probably bad (delete by replacing references to singletons from GameManager with event invokes on non-logical stuff //TEMP
 		BoardManager boardManager;
 
-		[SetUp]
-		public void Init()
+		[OneTimeSetUp]
+		public void SetUp()
 		{ // TODO: setup game manager
 			//board = new Board();
 			//board.ClearBoard();
@@ -46,13 +46,60 @@ namespace UnityChess.StrategicAI.Test
 		};
 
 		[UnityTest]
-		public IEnumerator MinMaxAddditionTempTest()
+		public IEnumerator MinMaxTwoRooksDepth2()
+		{ // start a game and see if it is won by black in 7 moves
+			int expectedMovesToCheckmate = 14; // last best result: 14 => 7 moves (white starts, each player does 7 moves)
+
+			winnerSide = Side.None;
+			movesExecutedByBothPlayers = 0;
+			int searchDepth = 2;
+			AI_MinMaxSettings bothAIsSettings = new AI_MinMaxSettings(searchDepth);
+
+			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
+			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
+			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
+			//TODO ensure the AIs are MinMaxes
+			GameManager.Instance.StartNewGame(true, true);
+			//yield return null;
+			yield return new TestTools.WaitUntilForSeconds(() => winnerSide == Side.Black, 30f);
+			Assert.AreEqual(Side.Black, winnerSide);
+			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
+		}
+
+		[UnityTest]
+		public IEnumerator MinMaxTwoRooksDepth4()
 		{ // start a game and see if it is won by black in 9 moves
 			int expectedMovesToCheckmate = 18; // last best result: 18 => 9 moves (white starts, each player does 9 moves)
 
 			winnerSide = Side.None;
 			movesExecutedByBothPlayers = 0;
+			int searchDepth = 4;
+			AI_MinMaxSettings bothAIsSettings = new AI_MinMaxSettings(searchDepth);
+
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
+			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
+			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
+			//TODO ensure the AIs are MinMaxes
+			GameManager.Instance.StartNewGame(true, true);
+			//yield return null;
+			yield return new TestTools.WaitUntilForSeconds(() => winnerSide == Side.Black, 30f);
+			Assert.AreEqual(Side.Black, winnerSide);
+			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
+		}
+
+		[UnityTest]
+		public IEnumerator MinMaxTwoRooksDepth6()
+		{ // start a game and see if it is won by black in 9 moves
+			int expectedMovesToCheckmate = 18; // last best result: 18 => 9 moves (white starts, each player does 9 moves)
+
+			winnerSide = Side.None;
+			movesExecutedByBothPlayers = 0;
+			int searchDepth = 6;
+			AI_MinMaxSettings bothAIsSettings = new AI_MinMaxSettings(searchDepth);
+
+			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
+			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
+			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
 			//TODO ensure the AIs are MinMaxes
 			GameManager.Instance.StartNewGame(true, true);
 			//yield return null;
@@ -71,7 +118,7 @@ namespace UnityChess.StrategicAI.Test
 			this.movesExecutedByBothPlayers += 1;
 		}
 
-		[TearDown]
+		[OneTimeTearDown]
 		public void TearDown()
 		{
 			gameManager.GameEndedEvent.RemoveListener(HandleGameEnded);

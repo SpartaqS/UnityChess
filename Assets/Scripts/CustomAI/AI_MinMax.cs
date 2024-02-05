@@ -11,7 +11,7 @@ using UnityChess.StrategicAI.Tools;
 
 namespace UnityChess.StrategicAI
 {
-	public class AI_MinMax : IUCIEngine
+	public class AI_MinMax : IUCIEngine, IUCIEngineWithCustomSettings
 	{
 		protected Game game;
 		protected Movement selectedMovement = null;
@@ -28,6 +28,20 @@ namespace UnityChess.StrategicAI
 
 		// AI settings
 		int searchDepth = 4;
+
+		/// <summary>
+		/// Apply settings which directly affect the algorithm used
+		/// </summary>
+		/// <param name="customSettings"></param>
+		void IUCIEngineWithCustomSettings.ApplyCustomSettings(IUCIEngineCustomSettings customSettings)
+		{
+			if (!typeof(AI_MinMaxSettings).IsAssignableFrom(customSettings.GetType()))
+				throw new System.InvalidOperationException("Provided custom settings are not for MinMax Strategic AI");
+
+			AI_MinMaxSettings customSettingsToApply = (AI_MinMaxSettings)customSettings;
+
+			searchDepth = customSettingsToApply.SearchDepth;
+		}
 
 		bool IUCIEngine.CanRequestRestart()
 		{
@@ -413,6 +427,16 @@ namespace UnityChess.StrategicAI
 
 			// TODO: order the movements list to speed up search
 			return movements;
+		}
+	}
+
+	public class AI_MinMaxSettings : IUCIEngineCustomSettings
+	{
+		public readonly int SearchDepth = 4;
+
+		public AI_MinMaxSettings(int searchDepth)
+		{
+			SearchDepth = searchDepth;
 		}
 	}
 }

@@ -82,6 +82,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	private IUCIEngine whiteUciEngine;
 	private IUCIEngine blackUciEngine;
 
+	private IUCIEngineCustomSettings whiteUciEngineCustomSettings = null;
+	private IUCIEngineCustomSettings blackUciEngineCustomSettings = null;
+
 	public void Start() {
 		VisualPiece.VisualPieceMoved += OnPieceMoved;
 
@@ -123,11 +126,27 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	// these two are used in tests
 	public bool UseCustomStartBoard { get => useCustomStartBoard; set => useCustomStartBoard = value; }
 	public (Square, Piece)[] CustomStartingPositionPieces { get => customStartingPositionPieces; set => customStartingPositionPieces = value; }
+	public IUCIEngineCustomSettings WhiteUciEngineCustomSettings { get => whiteUciEngineCustomSettings; set => whiteUciEngineCustomSettings = value; }
+	public IUCIEngineCustomSettings BlackUciEngineCustomSettings { get => blackUciEngineCustomSettings; set => blackUciEngineCustomSettings = value; }
 
+	/// <summary>
+	/// used when creating AI Players who are not customizable
+	/// </summary>
+	/// <param name="aiType"></param>
+	/// <param name="side"></param>
+	/// <returns></returns>
 	private IUCIEngine CreateAIPlayer(Type aiType, Side side)
 	{
 		return CreateAIPlayer(aiType, side, null);
 	}
+
+	/// <summary>
+	/// Create AI Player and apply custom settings if such are provided
+	/// </summary>
+	/// <param name="aiType"></param>
+	/// <param name="side"></param>
+	/// <param name="customSettings"></param>
+	/// <returns></returns>
 	private IUCIEngine CreateAIPlayer(Type aiType, Side side, IUCIEngineCustomSettings customSettings)
 	{
 		if (!typeof(IUCIEngine).IsAssignableFrom(aiType))
@@ -231,7 +250,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.White);
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.White, whiteUciEngineCustomSettings);
 #endif
 				if (whiteUciEngine.CanRequestRestart())
 				{
@@ -251,7 +270,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
-				blackUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.Black);
+				blackUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.Black, blackUciEngineCustomSettings);
 #endif
 				if (blackUciEngine.CanRequestRestart())
 				{

@@ -17,6 +17,9 @@ namespace UnityChess.Engine {
 		void ApplyCustomSettings(IUCIEngineCustomSettings customSettings);
 	}
 
+	/// <summary>
+	/// Interface used for organisation: used to pass custom settings to an IUCIEngineWithCustomSettings
+	/// </summary>
 	public interface IUCIEngineCustomSettings
 	{
 

@@ -94,6 +94,9 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	
 	public void LoadGame() => GameManager.Instance.LoadGame(GameStringInputField.text);
 
+	public void PauseAI() => GameManager.Instance.PauseGame();
+	public void UnpauseAI() => GameManager.Instance.UnPauseGame();
+
 	private void AddMoveToHistory(HalfMove latestHalfMove, Side latestTurnSide) {
 		RemoveAlternateHistory();
 		

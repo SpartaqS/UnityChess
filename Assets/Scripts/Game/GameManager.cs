@@ -82,8 +82,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	private IUCIEngine whiteUciEngine;
 	private IUCIEngine blackUciEngine;
 
-	private IUCIEngineCustomSettings whiteUciEngineCustomSettings = null;
-	private IUCIEngineCustomSettings blackUciEngineCustomSettings = null;
+	[SerializeField]
+	private UCIEngineCustomSettings whiteUciEngineCustomSettings = null;
+	[SerializeField]
+	private UCIEngineCustomSettings blackUciEngineCustomSettings = null;
 
 	public void Start() {
 		VisualPiece.VisualPieceMoved += OnPieceMoved;
@@ -126,8 +128,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	// these two are used in tests
 	public bool UseCustomStartBoard { get => useCustomStartBoard; set => useCustomStartBoard = value; }
 	public (Square, Piece)[] CustomStartingPositionPieces { get => customStartingPositionPieces; set => customStartingPositionPieces = value; }
-	public IUCIEngineCustomSettings WhiteUciEngineCustomSettings { get => whiteUciEngineCustomSettings; set => whiteUciEngineCustomSettings = value; }
-	public IUCIEngineCustomSettings BlackUciEngineCustomSettings { get => blackUciEngineCustomSettings; set => blackUciEngineCustomSettings = value; }
+	
+	public UCIEngineCustomSettings WhiteUciEngineCustomSettings { get => whiteUciEngineCustomSettings; set => whiteUciEngineCustomSettings = value; }
+	public UCIEngineCustomSettings BlackUciEngineCustomSettings { get => blackUciEngineCustomSettings; set => blackUciEngineCustomSettings = value; }
 
 	/// <summary>
 	/// used when creating AI Players who are not customizable
@@ -147,7 +150,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	/// <param name="side"></param>
 	/// <param name="customSettings"></param>
 	/// <returns></returns>
-	private IUCIEngine CreateAIPlayer(Type aiType, Side side, IUCIEngineCustomSettings customSettings)
+	private IUCIEngine CreateAIPlayer(Type aiType, Side side, UCIEngineCustomSettings customSettings)
 	{
 		if (!typeof(IUCIEngine).IsAssignableFrom(aiType))
 			throw new Exception("aiType is not a IUCIEngine");
@@ -465,10 +468,20 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		//TODO: if current player is an AI, order it to cancel its current search
 	}
 
-	public void UnPauseGame()
+	public async void UnPauseGame()
 	{
 		isGamePaused = false;
-		//TODO: if current player is an AI, order it to move
+
+		if (isWhiteAI && SideToMove == Side.White)
+		{
+			Movement bestMoveAfterUnpause = await whiteUciEngine.GetBestMove(10_000);
+			DoAIMove(bestMoveAfterUnpause);
+		}
+		else if (isBlackAI && SideToMove == Side.Black)
+		{
+			Movement bestMoveAfterUnpause = await blackUciEngine.GetBestMove(10_000);
+			DoAIMove(bestMoveAfterUnpause);
+		}
 	}
 
 	public enum GameManagerState // TODO ? Delete this?

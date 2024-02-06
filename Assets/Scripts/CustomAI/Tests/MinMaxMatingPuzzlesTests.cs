@@ -60,7 +60,7 @@ namespace UnityChess.StrategicAI.Test
 			int expectedMovesToCheckmate = 14; // last best result: 14 => 7 moves (white starts, each player does 7 moves)
 
 			int searchDepth = 2;
-			AI_MinMaxSettings bothAIsSettings = new AI_MinMaxSettings(searchDepth);
+			AIMinMaxSettings bothAIsSettings = new AIMinMaxSettings(searchDepth);
 
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
 			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
@@ -78,7 +78,7 @@ namespace UnityChess.StrategicAI.Test
 			int expectedMovesToCheckmate = 18; // last best result: 18 => 9 moves (white starts, each player does 9 moves)
 
 			int searchDepth = 4;
-			AI_MinMaxSettings bothAIsSettings = new AI_MinMaxSettings(searchDepth);
+			AIMinMaxSettings bothAIsSettings = new AIMinMaxSettings(searchDepth);
 
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
 			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
@@ -96,7 +96,7 @@ namespace UnityChess.StrategicAI.Test
 			int expectedMovesToCheckmate = 18; // last best result: 18 => 9 moves (white starts, each player does 9 moves)
 
 			int searchDepth = 6;
-			AI_MinMaxSettings bothAIsSettings = new AI_MinMaxSettings(searchDepth);
+			AIMinMaxSettings bothAIsSettings = new AIMinMaxSettings(searchDepth);
 
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
 			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;

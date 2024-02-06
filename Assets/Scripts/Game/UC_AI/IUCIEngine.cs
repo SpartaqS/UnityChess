@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using UnityEngine.Events;
+using UnityEngine;
 
 namespace UnityChess.Engine {
 	public interface IUCIEngine {
@@ -14,13 +15,13 @@ namespace UnityChess.Engine {
 	}
 
 	public interface IUCIEngineWithCustomSettings {
-		void ApplyCustomSettings(IUCIEngineCustomSettings customSettings);
+		void ApplyCustomSettings(UCIEngineCustomSettings customSettings);
 	}
 
 	/// <summary>
-	/// Interface used for organisation: used to pass custom settings to an IUCIEngineWithCustomSettings
+	/// Used to pass custom settings to an IUCIEngineWithCustomSettings
 	/// </summary>
-	public interface IUCIEngineCustomSettings
+	public class UCIEngineCustomSettings : ScriptableObject
 	{
 
 	}

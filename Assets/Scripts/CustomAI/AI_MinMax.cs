@@ -33,12 +33,12 @@ namespace UnityChess.StrategicAI
 		/// Apply settings which directly affect the algorithm used
 		/// </summary>
 		/// <param name="customSettings"></param>
-		void IUCIEngineWithCustomSettings.ApplyCustomSettings(IUCIEngineCustomSettings customSettings)
+		void IUCIEngineWithCustomSettings.ApplyCustomSettings(UCIEngineCustomSettings customSettings)
 		{
-			if (!typeof(AI_MinMaxSettings).IsAssignableFrom(customSettings.GetType()))
+			if (!typeof(AIMinMaxSettings).IsAssignableFrom(customSettings.GetType()))
 				throw new System.InvalidOperationException("Provided custom settings are not for MinMax Strategic AI");
 
-			AI_MinMaxSettings customSettingsToApply = (AI_MinMaxSettings)customSettings;
+			AIMinMaxSettings customSettingsToApply = (AIMinMaxSettings)customSettings;
 
 			searchDepth = customSettingsToApply.SearchDepth;
 		}
@@ -89,7 +89,7 @@ namespace UnityChess.StrategicAI
 			await Task.Run(async () => { while (selectedMovement == null) await Task.Delay(10); });
 			Movement bestMove = selectedMovement;
 			//float endTime = Time.realtimeSinceStartup;
-			Debug.Log($"Move search time: {searchStopwatch.ElapsedMilliseconds}");
+			//Debug.Log($"Move search time: {searchStopwatch.ElapsedMilliseconds}");
 			LogDebugInfo();
 			return bestMove;
 		}
@@ -122,7 +122,7 @@ namespace UnityChess.StrategicAI
 
 		void LogDebugInfo()
 		{
-			Debug.Log($"movesEvaluated: {movesEvaluated}\nmovesCutoff: {movesCutoff}\nttHits: {ttHits}\nbestBoardAtEndOfBestMove: {bestBoardAtEndOfBestMove}");
+			Debug.Log($"Selected move: {selectedMovement}\nMove search time: {searchStopwatch.ElapsedMilliseconds}\nmovesEvaluated: {movesEvaluated}\nmovesCutoff: {movesCutoff}\nttHits: {ttHits}\nbestBoardAtEndOfBestMove: {bestBoardAtEndOfBestMove}");
 		}
 
 
@@ -427,16 +427,6 @@ namespace UnityChess.StrategicAI
 
 			// TODO: order the movements list to speed up search
 			return movements;
-		}
-	}
-
-	public class AI_MinMaxSettings : IUCIEngineCustomSettings
-	{
-		public readonly int SearchDepth = 4;
-
-		public AI_MinMaxSettings(int searchDepth)
-		{
-			SearchDepth = searchDepth;
 		}
 	}
 }

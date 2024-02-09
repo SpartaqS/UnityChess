@@ -125,6 +125,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			(new Square("b7"), new Rook(Side.Black)),
 		};
 
+	//[SerializeField]
+	//(Square, Piece)[] customStartingPositionPieces = {
+	//		(new Square("h7"), new King(Side.White)),
+
+
+	//		(new Square("a2"), new Rook(Side.Black)),
+	//		(new Square("d4"), new King(Side.Black)),
+	//		(new Square("g2"), new Rook(Side.Black)),
+	//	};
+
 	// these two are used in tests
 	public bool UseCustomStartBoard { get => useCustomStartBoard; set => useCustomStartBoard = value; }
 	public (Square, Piece)[] CustomStartingPositionPieces { get => customStartingPositionPieces; set => customStartingPositionPieces = value; }

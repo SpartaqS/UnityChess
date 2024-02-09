@@ -1,3 +1,5 @@
+#define DEBUG
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -101,6 +103,9 @@ namespace UnityChess.StrategicAI
 		}
 
 		// Diagnostics
+#if DEBUG
+		List<Movement> DEBUG_Movements = new List<Movement>();
+#endif
 		//public SearchDiagnostics searchDiagnostics;
 		int movesEvaluated;
 		//int numQNodes;
@@ -108,8 +113,10 @@ namespace UnityChess.StrategicAI
 		//int numTranspositions;
 		System.Diagnostics.Stopwatch searchStopwatch;
 		int ttHits;
+#if DEBUG
 		string bestBoardAtEndOfBestMove = null;
 		string boardAtEndOfCurrentMove = null;
+#endif
 		void InitDebugInfo()
 		{
 			searchStopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -122,7 +129,11 @@ namespace UnityChess.StrategicAI
 
 		void LogDebugInfo()
 		{
-			Debug.Log($"Selected move: {selectedMovement}\nMove search time: {searchStopwatch.ElapsedMilliseconds}\nmovesEvaluated: {movesEvaluated}\nmovesCutoff: {movesCutoff}\nttHits: {ttHits}\nbestBoardAtEndOfBestMove: {bestBoardAtEndOfBestMove}");
+			string debugLog = $"Selected move: {selectedMovement}\nMove search time: {searchStopwatch.ElapsedMilliseconds}\nmovesEvaluated: {movesEvaluated}\nmovesCutoff: {movesCutoff}\nttHits: {ttHits}";
+#if DEBUG
+			debugLog += $"\nbestBoardAtEndOfBestMove: { bestBoardAtEndOfBestMove}";
+#endif
+			Debug.Log(debugLog);
 		}
 
 
@@ -168,10 +179,12 @@ namespace UnityChess.StrategicAI
 			}
 
 			string currentBoardHash = FENSerializer.GetBoardString(currentBoard);
+#if DEBUG
 			boardAtEndOfCurrentMove = FENSerializer.GetBoardString(currentBoard); // DIAGNOSTICS
+#endif
 			// If the same position has already been searched to at least an equal depth
 			// to the search we're doing now,we can just use the recorded evaluation.
-			bool positionStoredInTranspositionTable = transpositionTable.LookupEvaluation(currentBoardHash, out int storedEvaluation, currentSearchDepth, alpha, beta);
+			bool positionStoredInTranspositionTable = transpositionTable.LookupEvaluation(currentBoardHash, out int storedEvaluation, depth, alpha, beta); //?? currentSearchDepth -> depth ?
 			if (positionStoredInTranspositionTable)
 			{
 				ttHits++;
@@ -181,7 +194,9 @@ namespace UnityChess.StrategicAI
 					evalBestMoveThisIteration = storedEvaluation;
 					transpositionTable.GetNodeTypeAndDepth(currentBoardHash, out TranspositionTable.EvaluationType storedEvaluationType, out int storedDepth);
 					Debug.Log ("move retrieved " + bestMoveThisIteration.ToString() + " evaluation type: " + storedEvaluationType + " evaluation depth: " + storedDepth);
+#if DEBUG
 					bestBoardAtEndOfBestMove = boardAtEndOfCurrentMove; //DIAGNOSTICS
+#endif
 				}
 				return storedEvaluation;
 			}
@@ -222,8 +237,14 @@ namespace UnityChess.StrategicAI
 			{
 				Movement currentMovement = movements[i];
 				currentGame.TryExecuteMove(currentMovement);
+#if DEBUG
+				DEBUG_Movements.Add(currentMovement);
+#endif
 				int eval = -MinMax(depth - 1, currentSearchDepth + 1, -beta, -alpha);
 				currentGame.ResetGameToHalfMoveIndex((System.Math.Max(-1, currentGame.HalfMoveTimeline.HeadIndex - 1)));
+#if DEBUG
+				DEBUG_Movements.RemoveAt(DEBUG_Movements.Count - 1);
+#endif
 				movesEvaluated++;
 
 				// Move was *too* good, so opponent won't allow this position to be reached
@@ -231,7 +252,7 @@ namespace UnityChess.StrategicAI
 				if (eval >= beta)
 				{
 					evalType = TranspositionTable.EvaluationType.LowerBound;
-					transpositionTable.StoreEvaluation(currentBoardHash, beta, currentSearchDepth, evalType, currentMovement);
+					transpositionTable.StoreEvaluation(currentBoardHash, beta, depth, evalType, currentMovement);
 					movesCutoff++;
 					return beta;
 				}
@@ -247,12 +268,14 @@ namespace UnityChess.StrategicAI
 					{
 						bestMoveThisIteration = currentMovement;
 						evalBestMoveThisIteration = eval;
+#if DEBUG
 						bestBoardAtEndOfBestMove = boardAtEndOfCurrentMove; //DIAGNOSTICS
+#endif
 					}
 				}
 			}
 
-			transpositionTable.StoreEvaluation(currentBoardHash, alpha, currentSearchDepth, evalType, bestMoveInThisPosition);
+			transpositionTable.StoreEvaluation(currentBoardHash, alpha, depth, evalType, bestMoveInThisPosition);
 
 			return alpha;
 

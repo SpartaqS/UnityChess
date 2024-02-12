@@ -406,18 +406,22 @@ namespace UnityChess.StrategicAI
 					switch (piece)
 					{
 						case Pawn:
+							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Pawns, pieceSquare, readAsBlack);
 							break;
 						case Knight:
+							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Knights, pieceSquare, readAsBlack);
 							break;
 						case Bishop:
+							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Bishops, pieceSquare, readAsBlack);
 							break;
 						case Rook:
 							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Rooks, pieceSquare, readAsBlack);
 							break;
 						case Queen:
+							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Queens, pieceSquare, readAsBlack);
 							break;
 						case King:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.KingLate, pieceSquare, readAsBlack);
+							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.King, pieceSquare, readAsBlack);
 							break;
 					}
 				}

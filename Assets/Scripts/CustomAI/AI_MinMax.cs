@@ -1,4 +1,5 @@
 #define DEBUG
+#define USE_MOVE_ORDERING
 
 using System.Collections;
 using System.Collections.Generic;
@@ -27,7 +28,9 @@ namespace UnityChess.StrategicAI
 		protected Game currentGame;
 
 		protected TranspositionTable transpositionTable;
-
+#if USE_MOVE_ORDERING
+		protected MoveOrdering moveOrdering;
+#endif
 		// AI settings
 		int searchDepth = 4;
 
@@ -54,6 +57,9 @@ namespace UnityChess.StrategicAI
 		{
 			// nothing to do at start
 			transpositionTable = new TranspositionTable();
+#if USE_MOVE_ORDERING
+			moveOrdering = new MoveOrdering();
+#endif
 		}
 		Task IUCIEngine.SetupNewGame(Game game, UnityEvent<Side> gameEndedEvent, UnityAction<Side,int> startNewGameHandler)
 		{
@@ -227,9 +233,10 @@ namespace UnityChess.StrategicAI
 
 			// unpack moves into a list to iterate over them in the search
 			List<Movement> movements = UnpackMovementsToList(possibleMovesPerPiece);
-
-			//moveOrdering.OrderMoves(board, moves, settings.useTranspositionTable);
-
+#if USE_MOVE_ORDERING
+			// order moves: explore the most promising ones first.
+			movements = moveOrdering.OrderMoves(currentBoard, movements);
+#endif
 			TranspositionTable.EvaluationType evalType = TranspositionTable.EvaluationType.UpperBound;
 			Movement bestMoveInThisPosition = null;
 
@@ -286,11 +293,11 @@ namespace UnityChess.StrategicAI
 		const int positiveInfinity = 9999999;
 		const int negativeInfinity = -positiveInfinity;
 		// https://www.chessstrategyonline.com/content/tutorials/basic-chess-concepts-material
-		const int pawnValue = 100;
-		const int knightValue = 300;
-		const int bishopValue = 350;
-		const int rookValue = 500;
-		const int queenValue = 900;
+		public const int PawnValue = 100;
+		public const int KnightValue = 300;
+		public const int BishopValue = 350;
+		public const int RookValue = 500;
+		public const int QueenValue = 900;
 
 		protected class SideEvaluation {
 			public SideEvaluation(Side evaluatedSide)
@@ -362,30 +369,30 @@ namespace UnityChess.StrategicAI
 					if (piece.Owner != sideToScore)
 						continue;
 
-					int pieceValue = 0;
-					switch (piece)
-					{
-						case Pawn:
-							pieceValue = pawnValue;
-							break;
-						case Knight:
-							pieceValue = knightValue;
-							break;
-						case Bishop:
-							pieceValue = bishopValue;
-							break;
-						case Rook:
-							pieceValue = rookValue;
-							break;
-						case Queen:
-							pieceValue = queenValue;
-							break;
-					}
-					
+					int pieceValue = GetPieceMaterialScore(piece);
 					materialScore += pieceValue;
 				}
 
 			return materialScore;
+		}
+
+		public static int GetPieceMaterialScore(Piece piece)
+		{
+			switch (piece)
+			{
+				case Pawn:
+					return PawnValue;
+				case Knight:
+					return KnightValue;
+				case Bishop:
+					return BishopValue;
+				case Rook:
+					return RookValue;
+				case Queen:
+					return QueenValue;
+				default: // assuming that Kings have no "material value"
+					return 0;
+			}
 		}
 
 		protected SideEvaluation GetPositionScore(Board board, SideEvaluation sideEvaluation)
@@ -401,29 +408,7 @@ namespace UnityChess.StrategicAI
 						continue;
 
 					Square pieceSquare = new Square(file, rank);
-					bool readAsBlack = sideEvaluation.evaluatedSide == Side.Black;
-					
-					switch (piece)
-					{
-						case Pawn:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Pawns, pieceSquare, readAsBlack);
-							break;
-						case Knight:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Knights, pieceSquare, readAsBlack);
-							break;
-						case Bishop:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Bishops, pieceSquare, readAsBlack);
-							break;
-						case Rook:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Rooks, pieceSquare, readAsBlack);
-							break;
-						case Queen:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.Queens, pieceSquare, readAsBlack);
-							break;
-						case King:
-							sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(PiecePositionScoreTable.King, pieceSquare, readAsBlack);
-							break;
-					}
+					sideEvaluation.piecePositionScore += PiecePositionScoreTable.Read(piece, pieceSquare);
 				}
 
 			return sideEvaluation;

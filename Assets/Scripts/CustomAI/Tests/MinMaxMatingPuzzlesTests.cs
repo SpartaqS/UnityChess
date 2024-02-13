@@ -60,12 +60,7 @@ namespace UnityChess.StrategicAI.Test
 			int expectedMovesToCheckmate = 14; // last best result: 14 => 7 moves (white starts, each player does 7 moves)
 
 			int searchDepth = 2;
-			AIMinMaxSettings bothAIsSettings = ScriptableObject.CreateInstance<AIMinMaxSettings>();
-			bothAIsSettings.SearchDepth = searchDepth;
-
-			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
-			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
-			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
+			SetupTwoRooksTest(searchDepth);
 			//TODO ensure the AIs are MinMaxes
 			GameManager.Instance.StartNewGame(true, true);
 			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 30f, GameManager.Instance.PauseGame);
@@ -79,12 +74,7 @@ namespace UnityChess.StrategicAI.Test
 			int expectedMovesToCheckmate = 12; // last best result: 12 => 6 moves (white starts, each player does 6 moves)
 
 			int searchDepth = 4;
-			AIMinMaxSettings bothAIsSettings = ScriptableObject.CreateInstance<AIMinMaxSettings>();
-			bothAIsSettings.SearchDepth = searchDepth;
-
-			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
-			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
-			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
+			SetupTwoRooksTest(searchDepth);
 			//TODO ensure the AIs are MinMaxes
 			GameManager.Instance.StartNewGame(true, true);
 			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 30f, GameManager.Instance.PauseGame);
@@ -98,18 +88,36 @@ namespace UnityChess.StrategicAI.Test
 			int expectedMovesToCheckmate = 12; // last best result: 18 => 9 moves (white starts, each player does 9 moves)
 
 			int searchDepth = 6;
+			SetupTwoRooksTest(searchDepth);
+			//TODO ensure the AIs are MinMaxes
+			GameManager.Instance.StartNewGame(true, true);
+			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 90f, GameManager.Instance.PauseGame);
+			Assert.AreEqual(Side.Black, winnerSide);
+			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
+		}
+
+		[UnityTest]
+		public IEnumerator MinMaxTwoRooksDepth8()
+		{ // start a game and see if it is won by black in 9 moves
+			int expectedMovesToCheckmate = 12; // last best result: 18 => 9 moves (white starts, each player does 9 moves)
+
+			int searchDepth = 8;
+			SetupTwoRooksTest(searchDepth);
+			//TODO ensure the AIs are MinMaxes
+			GameManager.Instance.StartNewGame(true, true);
+			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 360f, GameManager.Instance.PauseGame);
+			Assert.AreEqual(Side.Black, winnerSide);
+			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
+		}
+
+		private void SetupTwoRooksTest(int searchDepth)
+		{
 			AIMinMaxSettings bothAIsSettings = ScriptableObject.CreateInstance<AIMinMaxSettings>();
 			bothAIsSettings.SearchDepth = searchDepth;
 
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
 			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
 			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
-			//TODO ensure the AIs are MinMaxes
-			GameManager.Instance.StartNewGame(true, true);
-			//yield return WaitForSecondsRealtime
-			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 180f, GameManager.Instance.PauseGame);
-			Assert.AreEqual(Side.Black, winnerSide);
-			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
 		}
 
 		private void HandleGameEnded(Side winnerSide)

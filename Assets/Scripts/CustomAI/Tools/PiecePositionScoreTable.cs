@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityChess.StrategicAI.Tools
 {
-	public class PiecePositionScoreTable
+	public static class PiecePositionScoreTable
 	{
 		public static int Read(int[] tableToRead, Square square, bool readAsBlack)
 		{
@@ -34,6 +34,29 @@ namespace UnityChess.StrategicAI.Tools
 			// 8 -> 0
 			// so in human readable table the rank == 8 - rank
 			return tableToRead[square.File - 1 + (8 - square.Rank) * 8];
+		}
+
+		public static int Read(Piece piece, Square square)
+		{
+			bool readAsBlack = piece.Owner == Side.Black;
+
+			switch (piece)
+			{
+				case Pawn:
+					return Read(Pawns, square, readAsBlack);
+				case Knight:
+					return Read(Knights, square, readAsBlack);
+				case Bishop:
+					return Read(Bishops, square, readAsBlack);
+				case Rook:
+					return Read(Rooks, square, readAsBlack);
+				case Queen:
+					return Read(Queens, square, readAsBlack);
+				case King:
+					return Read(Kings, square, readAsBlack);
+				default:
+					throw new System.Exception("Unregistered piece read attempt");
+			}
 		}
 
 		// the values are setup in such a way to read it as if this was the chess board ( read as white)
@@ -92,7 +115,7 @@ namespace UnityChess.StrategicAI.Tools
 			-20, -10, -10,  -5,  -5, -10, -10, -20  //1
 		};  //a,   b,   c,   d,   e,   f,   g,   h  //
 
-		public static readonly int[] King =
+		public static readonly int[] Kings =
 		{
 			-20, -10, -10, -10, -10, -10, -10, -20, //8
 			-5,   0,   5,   5,   5,   5,   0,  -5,  //7

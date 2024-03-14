@@ -347,11 +347,18 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		return true;
 	}
 	
-	private async Task<bool> TryHandleSpecialMoveBehaviourAsync(SpecialMove specialMove) {
-		switch (specialMove) {
-			case CastlingMove castlingMove:
-				BoardManager.Instance.CastleRook(castlingMove.RookSquare, castlingMove.GetRookEndSquare());
-				return true;
+	/// <summary>
+	/// Make sure that the move is a special move before calling it ("isSpecialMove" == true)
+	/// </summary>
+	/// <param name="specialMove"></param>
+	/// <returns></returns>
+	private async Task<bool> TryHandleSpecialMoveBehaviourAsync(Movement specialMove) {
+		if (specialMove.IsCastlingMove)
+		{
+			BoardManager.Instance.CastleRook(castlingMove.RookSquare, castlingMove.GetRookEndSquare());
+			return true;
+		}
+		else if (specialMove.)
 			case EnPassantMove enPassantMove:
 				BoardManager.Instance.TryDestroyVisualPiece(enPassantMove.CapturedPawnSquare);
 				return true;
@@ -423,10 +430,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			promotionMove.SetPromotionPiece(promotionPiece);
 		}
 
-		if ((move is not SpecialMove specialMove || await TryHandleSpecialMoveBehaviourAsync(specialMove))
+		if ((!move.IsSpecialMove || await TryHandleSpecialMoveBehaviourAsync(move))
 		    && TryExecuteMove(move)
 		) {
-			if (move is not SpecialMove) { BoardManager.Instance.TryDestroyVisualPiece(move.End); }
+			if (!move.IsSpecialMove) { BoardManager.Instance.TryDestroyVisualPiece(move.End); }
 
 			if (move is PromotionMove) {
 				movedPieceTransform = BoardManager.Instance.GetPieceGOAtPosition(move.End).transform;

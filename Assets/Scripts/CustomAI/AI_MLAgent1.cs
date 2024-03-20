@@ -13,7 +13,7 @@ namespace UnityChess.StrategicAI
 	public class AI_MLAgent1 : Agent,  IUCIEngine
 	{//TODO actually implement interfacing between Model and game
 		protected Game game;
-		protected Movement selectedMovement = null;
+		protected Movement selectedMovement = Movement.InvalidMove();
 		Side controlledSide = Side.None;
 		UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
 		private void RequestRestartEndGame() { requestStartNewGame.Invoke(controlledSide, 1); }
@@ -71,16 +71,16 @@ namespace UnityChess.StrategicAI
 		async Task<Movement> IUCIEngine.GetBestMove(int timeoutMS)
 		{
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
-				return null;
+				return Movement.InvalidMove();
 
 			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
-				return null;
+				return Movement.InvalidMove();
 
 			controlledSide = currentConditions.SideToMove;
-			selectedMovement = null;
+			selectedMovement = Movement.InvalidMove();
 			RequestDecision();
 			//TODO implement timeout
-			await Task.Run(async () => { while (selectedMovement == null) await Task.Delay(10); });
+			await Task.Run(async () => { while (selectedMovement == Movement.InvalidMove()) await Task.Delay(10); });
 			Movement bestMove = selectedMovement;
 			return bestMove;
 		}
@@ -131,8 +131,8 @@ namespace UnityChess.StrategicAI
 			Movement chosenMove;
 			if (promotionPiece != null)
 			{
-				chosenMove = new PromotionMove(startSquare, endSquare);
-				(chosenMove as PromotionMove).SetPromotionPiece(promotionPiece);
+				chosenMove = Movement.PromotionMove(startSquare, endSquare);
+				chosenMove.SetPromotionPiece(promotionPiece);
 			}
 			else // non-promotion moves are checked by cheking start and end squares only, not their special types so we do not need to decide what move it is at this stage
 			{
@@ -148,8 +148,8 @@ namespace UnityChess.StrategicAI
 				return;
 			}
 			
-			bool isLegalMoveAPromotionMove = move is PromotionMove;
-			bool isChosenMoveAPromotionMove = chosenMove is PromotionMove;
+			bool isLegalMoveAPromotionMove = move.IsPromotionMove;
+			bool isChosenMoveAPromotionMove = chosenMove.IsPromotionMove;
 			if (isLegalMoveAPromotionMove != isChosenMoveAPromotionMove)
 			{
 				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
@@ -264,9 +264,9 @@ namespace UnityChess.StrategicAI
 			discreteActions[2] = move.End.File - 1;
 			discreteActions[3] = move.End.Rank - 1;
 			discreteActions[4] = 0;
-			if (move is PromotionMove)
+			if (move.IsPromotionMove)
 			{
-				Piece promotionPiece = (move as PromotionMove).PromotionPiece;
+				Piece promotionPiece = move.PromotionPiece;
 				GetPieceEnum(promotionPiece, out PieceEnum pieceEnum);
 				discreteActions[4] = (int)pieceEnum;
 			}

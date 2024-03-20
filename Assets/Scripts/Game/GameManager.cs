@@ -355,47 +355,49 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	private async Task<bool> TryHandleSpecialMoveBehaviourAsync(Movement specialMove) {
 		if (specialMove.IsCastlingMove)
 		{
-			BoardManager.Instance.CastleRook(castlingMove.RookSquare, castlingMove.GetRookEndSquare());
+			BoardManager.Instance.CastleRook(specialMove.RookSquare, specialMove.GetRookEndSquare());
 			return true;
 		}
-		else if (specialMove.)
-			case EnPassantMove enPassantMove:
-				BoardManager.Instance.TryDestroyVisualPiece(enPassantMove.CapturedPawnSquare);
-				return true;
-			case PromotionMove { PromotionPiece: null } promotionMove:
-				UIManager.Instance.SetActivePromotionUI(true);
-				BoardManager.Instance.SetActiveAllPieces(false);
-
-				promotionUITaskCancellationTokenSource?.Cancel();
-				promotionUITaskCancellationTokenSource = new CancellationTokenSource();
-				
-				ElectedPiece choice = await Task.Run(GetUserPromotionPieceChoice, promotionUITaskCancellationTokenSource.Token);
-				
-				UIManager.Instance.SetActivePromotionUI(false);
-				BoardManager.Instance.SetActiveAllPieces(true);
-
-				if (promotionUITaskCancellationTokenSource == null
-				    || promotionUITaskCancellationTokenSource.Token.IsCancellationRequested
-				) { return false; }
-
-				promotionMove.SetPromotionPiece(
-					PromotionUtil.GeneratePromotionPiece(choice, SideToMove)
-				);
-				BoardManager.Instance.TryDestroyVisualPiece(promotionMove.Start);
-				BoardManager.Instance.TryDestroyVisualPiece(promotionMove.End);
-				BoardManager.Instance.CreateAndPlacePieceGO(promotionMove.PromotionPiece, promotionMove.End);
-
-				promotionUITaskCancellationTokenSource = null;
-				return true;
-			case PromotionMove promotionMove:
-				BoardManager.Instance.TryDestroyVisualPiece(promotionMove.Start);
-				BoardManager.Instance.TryDestroyVisualPiece(promotionMove.End);
-				BoardManager.Instance.CreateAndPlacePieceGO(promotionMove.PromotionPiece, promotionMove.End);
-				
-				return true;
-			default:
-				return false;
+		else if (specialMove.IsEnPassantMove)
+		{
+			BoardManager.Instance.TryDestroyVisualPiece(specialMove.CapturedPawnSquare);
+			return true;
 		}
+		else if (specialMove.IsPromotionMove && specialMove.PromotionPiece == null) {
+			UIManager.Instance.SetActivePromotionUI(true);
+			BoardManager.Instance.SetActiveAllPieces(false);
+
+			promotionUITaskCancellationTokenSource?.Cancel();
+			promotionUITaskCancellationTokenSource = new CancellationTokenSource();
+
+			ElectedPiece choice = await Task.Run(GetUserPromotionPieceChoice, promotionUITaskCancellationTokenSource.Token);
+
+			UIManager.Instance.SetActivePromotionUI(false);
+			BoardManager.Instance.SetActiveAllPieces(true);
+
+			if (promotionUITaskCancellationTokenSource == null
+				|| promotionUITaskCancellationTokenSource.Token.IsCancellationRequested
+			) { return false; }
+
+			specialMove.SetPromotionPiece(
+				PromotionUtil.GeneratePromotionPiece(choice, SideToMove)
+			);
+			BoardManager.Instance.TryDestroyVisualPiece(specialMove.Start);
+			BoardManager.Instance.TryDestroyVisualPiece(specialMove.End);
+			BoardManager.Instance.CreateAndPlacePieceGO(specialMove.PromotionPiece, specialMove.End);
+
+			promotionUITaskCancellationTokenSource = null;
+			return true;
+		}
+		else if (specialMove.IsPromotionMove) // PromotionPiece is not null
+		{ 
+			BoardManager.Instance.TryDestroyVisualPiece(specialMove.Start);
+			BoardManager.Instance.TryDestroyVisualPiece(specialMove.End);
+			BoardManager.Instance.CreateAndPlacePieceGO(specialMove.PromotionPiece, specialMove.End);
+
+			return true;
+		}
+			return false;
 	}
 	
 	private ElectedPiece GetUserPromotionPieceChoice() {
@@ -426,8 +428,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			return;
 		}
 
-		if (move is PromotionMove promotionMove) {
-			promotionMove.SetPromotionPiece(promotionPiece);
+		if (move.IsPromotionMove) {
+			move.SetPromotionPiece(promotionPiece);
 		}
 
 		if ((!move.IsSpecialMove || await TryHandleSpecialMoveBehaviourAsync(move))
@@ -435,7 +437,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		) {
 			if (!move.IsSpecialMove) { BoardManager.Instance.TryDestroyVisualPiece(move.End); }
 
-			if (move is PromotionMove) {
+			if (move.IsPromotionMove) {
 				movedPieceTransform = BoardManager.Instance.GetPieceGOAtPosition(move.End).transform;
 			}
 
@@ -470,7 +472,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			move.Start,
 			movedPiece.transform,
 			endSquareGO.transform,
-			(move as PromotionMove)?.PromotionPiece
+			move.PromotionPiece // if it is null then nothing bad happens as OnPieceMoved does not use it if it is not a promotion move
 		);
 	}
 

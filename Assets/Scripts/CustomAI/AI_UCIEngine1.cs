@@ -41,15 +41,15 @@ namespace UnityChess.StrategicAI
 		public virtual Movement FindBestMove(Game game)
 		{
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
-				return null;
+				return Movement.InvalidMove();
 
 			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
-				return null;
+				return Movement.InvalidMove();
 
 			Side currentSide = currentConditions.SideToMove;
 
 
-			Movement bestMove = null;
+			Movement bestMove = Movement.InvalidMove();
 			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
 			bool isCapturePossible = false;
 			List<MovementWithSide> capturingMoves, noncapturingMoves;
@@ -79,15 +79,15 @@ namespace UnityChess.StrategicAI
 				{
 					if (piece is Pawn)
 					{
-						if (move is EnPassantMove)
+						if (move.IsEnPassantMove)
 						{
 							isCapturePossible = true;
 							capturingMoves.Add(new MovementWithSide(currentSide, move));
 							continue; // en passant cannot end in promotion, but is a capturing move
 						}
-						if (move is PromotionMove)
+						if (move.IsPromotionMove)
 						{// pawn promotes: pick a promotion for it
-							(move as PromotionMove).SetPromotionPiece(new Queen(currentSide));
+							move.SetPromotionPiece(new Queen(currentSide));
 						}
 
 					}

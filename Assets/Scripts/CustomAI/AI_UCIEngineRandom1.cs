@@ -17,15 +17,15 @@ namespace UnityChess.StrategicAI
 		{
 			float captureMoveChance = 0.5f;
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
-				return null;
+				return Movement.InvalidMove();
 
 			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
-				return null;
+				return Movement.InvalidMove();
 
 			Side currentSide = currentConditions.SideToMove;
 
 
-			Movement bestMove = null;
+			Movement bestMove = Movement.InvalidMove();
 			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
 			bool isCapturePossible = false;
 			List<MovementWithSide> capturingMoves, noncapturingMoves;

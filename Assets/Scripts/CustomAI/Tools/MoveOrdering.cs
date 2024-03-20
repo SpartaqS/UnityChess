@@ -56,7 +56,7 @@ namespace UnityChess.StrategicAI.Tools
 
 				if (movePiece is Pawn)
 				{
-					if (move is PromotionMove && !isCapture)
+					if (move.IsPromotionMove && !isCapture)
 					{
 						score += promoteBias;
 					}

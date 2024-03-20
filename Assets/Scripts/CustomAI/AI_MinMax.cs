@@ -17,9 +17,9 @@ namespace UnityChess.StrategicAI
 	public class AI_MinMax : IUCIEngine, IUCIEngineWithCustomSettings
 	{
 		protected Game game;
-		protected Movement selectedMovement = null;
+		protected Movement selectedMovement = Movement.InvalidMove();
 		protected int selectedMovementEval = 0;
-		protected Movement bestMoveThisIteration = null;
+		protected Movement bestMoveThisIteration = Movement.InvalidMove();
 		protected int evalBestMoveThisIteration = 0;
 		Side controlledSide = Side.None;
 		bool abortSearch = false;
@@ -78,13 +78,13 @@ namespace UnityChess.StrategicAI
 		{
 			//float startTime = Time.realtimeSinceStartup;
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
-				return null;
+				return Movement.InvalidMove();
 
 			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
-				return null;
+				return Movement.InvalidMove();
 
 			controlledSide = currentConditions.SideToMove;
-			selectedMovement = null;
+			selectedMovement = Movement.InvalidMove();
 			currentGame = new Game(currentConditions, currentBoard);
 			transpositionTable.Clear();
 
@@ -94,7 +94,7 @@ namespace UnityChess.StrategicAI
 			InitDebugInfo();
 			selectedMovementEval = MinMax(searchDepth, 0, negativeInfinity, positiveInfinity);
 			selectedMovement = bestMoveThisIteration; // after adding iterative search this will make more sense
-			await Task.Run(async () => { while (selectedMovement == null) await Task.Delay(10); });
+			await Task.Run(async () => { while (selectedMovement == Movement.InvalidMove()) await Task.Delay(10); });
 			Movement bestMove = selectedMovement;
 			//float endTime = Time.realtimeSinceStartup;
 			//Debug.Log($"Move search time: {searchStopwatch.ElapsedMilliseconds}");
@@ -238,7 +238,7 @@ namespace UnityChess.StrategicAI
 			movements = moveOrdering.OrderMoves(currentBoard, movements);
 #endif
 			TranspositionTable.EvaluationType evalType = TranspositionTable.EvaluationType.UpperBound;
-			Movement bestMoveInThisPosition = null;
+			Movement bestMoveInThisPosition = Movement.InvalidMove();
 
 			for (int i = 0; i < movements.Count; i++)
 			{
@@ -424,10 +424,10 @@ namespace UnityChess.StrategicAI
 				{
 					if (piece is Pawn)
 					{
-						if (move is PromotionMove)          // TODO: generate moves with promotions for each piece type that can be obtained via a promotion
+						if (move.IsPromotionMove)          // TODO: generate moves with promotions for each piece type that can be obtained via a promotion
 						{// pawn promotes: pick a promotion for it
 							Side currentSide = piece.Owner;
-							(move as PromotionMove).SetPromotionPiece(new Queen(currentSide));
+							move.SetPromotionPiece(new Queen(currentSide));
 							movements.Add(move);
 							continue;
 						}

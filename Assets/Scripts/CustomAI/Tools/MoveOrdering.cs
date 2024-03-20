@@ -16,9 +16,9 @@ namespace UnityChess.StrategicAI.Tools
 		const int killerBias = 4 * million;
 		const int losingCaptureBias = 2 * million;
 		const int regularBias = 0;
-		public List<Movement> OrderMoves(Board board, List<Movement> movements)
+		public System.Span<Movement> OrderMoves(Board board, System.Span<Movement> movements)
 		{
-			for (int i = 0; i < movements.Count; i++)
+			for (int i = 0; i < movements.Length; i++)
 			{
 
 				Movement move = movements[i];
@@ -92,12 +92,12 @@ namespace UnityChess.StrategicAI.Tools
 				moveScores[i] = score;
 			}
 
-			Qsort(movements, moveScores, 0, movements.Count - 1);
+			Qsort(movements, moveScores, 0, movements.Length - 1);
 
 			return movements;
 		}
 
-		public void Qsort(List<Movement> values, int[] scores, int low, int high)
+		public void Qsort(System.Span<Movement> values, int[] scores, int low, int high)
 		{
 			if (low < high)
 			{
@@ -107,7 +107,7 @@ namespace UnityChess.StrategicAI.Tools
 			}
 		}
 
-		static int Partition(List<Movement> values, int[] scores, int low, int high)
+		static int Partition(System.Span<Movement> values, int[] scores, int low, int high)
 		{
 			int pivotScore = scores[high];
 			int i = low - 1;

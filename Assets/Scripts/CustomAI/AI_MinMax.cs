@@ -232,7 +232,9 @@ namespace UnityChess.StrategicAI
 			}
 
 			// unpack moves into a list to iterate over them in the search
-			List<Movement> movements = UnpackMovementsToList(possibleMovesPerPiece);
+			System.Span<Movement> movements = stackalloc Movement[maxMovementCount];
+
+			movements = UnpackMovementsToList(possibleMovesPerPiece, movements);
 #if USE_MOVE_ORDERING
 			// order moves: explore the most promising ones first.
 			movements = moveOrdering.OrderMoves(currentBoard, movements);
@@ -240,7 +242,7 @@ namespace UnityChess.StrategicAI
 			TranspositionTable.EvaluationType evalType = TranspositionTable.EvaluationType.UpperBound;
 			Movement bestMoveInThisPosition = Movement.InvalidMove();
 
-			for (int i = 0; i < movements.Count; i++)
+			for (int i = 0; i < movements.Length; i++)
 			{
 				Movement currentMovement = movements[i];
 				currentGame.TryExecuteMove(currentMovement);
@@ -414,10 +416,11 @@ namespace UnityChess.StrategicAI
 			return sideEvaluation;
 		}
 
-		protected List<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece)
+		readonly int maxMovementCount = 256; // the realistic theoretical max is like 241, so 256 is enough to fit them all
+		protected System.Span<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece, System.Span<Movement> movements)
 		{
-			List<Movement> movements = new List<Movement>();
 
+			int currentIndex = 0;
 			foreach (Piece piece in possibleMovesPerPiece.Keys)
 			{
 				foreach (Movement move in possibleMovesPerPiece[piece].Values)
@@ -428,16 +431,17 @@ namespace UnityChess.StrategicAI
 						{// pawn promotes: pick a promotion for it
 							Side currentSide = piece.Owner;
 							move.SetPromotionPiece(new Queen(currentSide));
-							movements.Add(move);
+							movements[currentIndex] = move;
+							currentIndex++;
 							continue;
 						}
 
 					}
-					movements.Add(move);
+					movements[currentIndex] = move;
+					currentIndex++;
 				}
 			}
 
-			// TODO: order the movements list to speed up search
 			return movements;
 		}
 	}

@@ -363,7 +363,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.CapturedPawnSquare);
 			return true;
 		}
-		else if (specialMove.IsPromotionMove && specialMove.PromotionPiece == null) {
+		else if (specialMove.IsPromotionMove && specialMove.PromotionPiece == ElectedPiece.None) {
 			UIManager.Instance.SetActivePromotionUI(true);
 			BoardManager.Instance.SetActiveAllPieces(false);
 
@@ -384,7 +384,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			);
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.Start);
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.End);
-			BoardManager.Instance.CreateAndPlacePieceGO(specialMove.PromotionPiece, specialMove.End);
+			BoardManager.Instance.CreateAndPlacePieceGO(PromotionUtil.GeneratePromotionPiece(specialMove.PromotionPiece, CurrentBoard[specialMove.Start].Owner), specialMove.End);
 
 			promotionUITaskCancellationTokenSource = null;
 			return true;
@@ -393,7 +393,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		{ 
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.Start);
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.End);
-			BoardManager.Instance.CreateAndPlacePieceGO(specialMove.PromotionPiece, specialMove.End);
+			BoardManager.Instance.CreateAndPlacePieceGO(PromotionUtil.GeneratePromotionPiece(specialMove.PromotionPiece, CurrentBoard[specialMove.Start].Owner), specialMove.End);
 
 			return true;
 		}
@@ -472,7 +472,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			move.Start,
 			movedPiece.transform,
 			endSquareGO.transform,
-			move.PromotionPiece // if it is null then nothing bad happens as OnPieceMoved does not use it if it is not a promotion move
+			PromotionUtil.GeneratePromotionPiece(move.PromotionPiece, move.PromotionPieceSide)
 		);
 	}
 

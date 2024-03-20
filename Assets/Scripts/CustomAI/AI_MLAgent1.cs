@@ -266,7 +266,7 @@ namespace UnityChess.StrategicAI
 			discreteActions[4] = 0;
 			if (move.IsPromotionMove)
 			{
-				Piece promotionPiece = move.PromotionPiece;
+				Piece promotionPiece = PromotionUtil.GeneratePromotionPiece(move.PromotionPiece, move.PromotionPieceSide);
 				GetPieceEnum(promotionPiece, out PieceEnum pieceEnum);
 				discreteActions[4] = (int)pieceEnum;
 			}

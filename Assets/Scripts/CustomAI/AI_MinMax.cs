@@ -245,6 +245,10 @@ namespace UnityChess.StrategicAI
 			for (int i = 0; i < movements.Length; i++)
 			{
 				Movement currentMovement = movements[i];
+				if (!currentMovement.IsValid()) // skip any invalid moves that are leftover
+				{
+					break;
+				}
 				currentGame.TryExecuteMove(currentMovement);
 #if DEBUG
 				DEBUG_Movements.Add(currentMovement);
@@ -416,9 +420,14 @@ namespace UnityChess.StrategicAI
 			return sideEvaluation;
 		}
 
-		readonly int maxMovementCount = 256; // the realistic theoretical max is like 241, so 256 is enough to fit them all
+		readonly int maxMovementCount = MoveOrdering.maxMoveCount; // the realistic theoretical max
 		protected System.Span<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece, System.Span<Movement> movements)
 		{
+			// clear movement array
+			for (int i = 0; i < maxMovementCount; i++)
+			{
+				movements[i] = Movement.InvalidMove();
+			}
 
 			int currentIndex = 0;
 			foreach (Piece piece in possibleMovesPerPiece.Keys)

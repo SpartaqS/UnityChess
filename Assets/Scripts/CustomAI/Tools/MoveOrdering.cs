@@ -6,7 +6,8 @@ namespace UnityChess.StrategicAI.Tools
 {
 	public class MoveOrdering
 	{
-		int[] moveScores = new int[218]; // very likely the max number of movements a position can have:
+		public static int maxMoveCount = 218;
+		int[] moveScores = new int[maxMoveCount]; // very likely the max number of movements a position can have:
 										 // //https://www.chess.com/forum/view/general/max-number-of-movements//
 
 		const int million = 1000000;
@@ -16,6 +17,7 @@ namespace UnityChess.StrategicAI.Tools
 		const int killerBias = 4 * million;
 		const int losingCaptureBias = 2 * million;
 		const int regularBias = 0;
+		const int invalidMoveScore = -100 * million;
 		public System.Span<Movement> OrderMoves(Board board, System.Span<Movement> movements)
 		{
 			for (int i = 0; i < movements.Length; i++)
@@ -28,6 +30,13 @@ namespace UnityChess.StrategicAI.Tools
 				//	moveScores[i] = hashMoveScore;
 				//	continue;
 				//}
+
+				if (!move.IsValid())
+				{
+					moveScores[i] = invalidMoveScore;
+					continue;
+				}
+
 				int score = 0;
 				Square startSquare = move.Start;
 				Square targetSquare = move.End;

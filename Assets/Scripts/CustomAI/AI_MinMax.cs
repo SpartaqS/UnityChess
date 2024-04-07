@@ -232,7 +232,7 @@ namespace UnityChess.StrategicAI
 			}
 
 			// unpack moves into a list to iterate over them in the search
-			System.Span<Movement> movements = stackalloc Movement[maxMovementCount];
+			List<Movement> movements = new List<Movement>();
 
 			movements = UnpackMovementsToList(possibleMovesPerPiece, movements);
 #if USE_MOVE_ORDERING
@@ -242,7 +242,7 @@ namespace UnityChess.StrategicAI
 			TranspositionTable.EvaluationType evalType = TranspositionTable.EvaluationType.UpperBound;
 			Movement bestMoveInThisPosition = Movement.InvalidMove();
 
-			for (int i = 0; i < movements.Length; i++)
+			for (int i = 0; i < movements.Count; i++)
 			{
 				Movement currentMovement = movements[i];
 				if (!currentMovement.IsValid()) // skip any invalid moves that are leftover
@@ -420,16 +420,8 @@ namespace UnityChess.StrategicAI
 			return sideEvaluation;
 		}
 
-		readonly int maxMovementCount = MoveOrdering.maxMoveCount; // the realistic theoretical max
-		protected System.Span<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece, System.Span<Movement> movements)
+		protected List<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece, List<Movement> movements)
 		{
-			// clear movement array
-			for (int i = 0; i < maxMovementCount; i++)
-			{
-				movements[i] = Movement.InvalidMove();
-			}
-
-			int currentIndex = 0;
 			foreach (Piece piece in possibleMovesPerPiece.Keys)
 			{
 				foreach (Movement move in possibleMovesPerPiece[piece].Values)
@@ -440,14 +432,12 @@ namespace UnityChess.StrategicAI
 						{// pawn promotes: pick a promotion for it
 							Side currentSide = piece.Owner;
 							move.SetPromotionPiece(new Queen(currentSide));
-							movements[currentIndex] = move;
-							currentIndex++;
+							movements.Add(move);
 							continue;
 						}
 
 					}
-					movements[currentIndex] = move;
-					currentIndex++;
+					movements.Add(move);
 				}
 			}
 

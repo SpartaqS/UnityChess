@@ -428,7 +428,7 @@ namespace UnityChess.StrategicAI
 				{
 					if (piece is Pawn)
 					{
-						if (move.IsPromotionMove)          // TODO: generate moves with promotions for each piece type that can be obtained via a promotion
+						if (move.IsPromotionMove())          // TODO: generate moves with promotions for each piece type that can be obtained via a promotion
 						{// pawn promotes: pick a promotion for it
 							Side currentSide = piece.Owner;
 							move.SetPromotionPiece(new Queen(currentSide));

@@ -353,17 +353,17 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	/// <param name="specialMove"></param>
 	/// <returns></returns>
 	private async Task<bool> TryHandleSpecialMoveBehaviourAsync(Movement specialMove) {
-		if (specialMove.IsCastlingMove)
+		if (specialMove.IsCastlingMove())
 		{
 			BoardManager.Instance.CastleRook(specialMove.RookSquare, specialMove.GetRookEndSquare());
 			return true;
 		}
-		else if (specialMove.IsEnPassantMove)
+		else if (specialMove.IsEnPassantMove())
 		{
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.CapturedPawnSquare);
 			return true;
 		}
-		else if (specialMove.IsPromotionMove && specialMove.PromotionPiece == ElectedPiece.None) {
+		else if (specialMove.IsPromotionMove() && specialMove.PromotionPiece == ElectedPiece.None) {
 			UIManager.Instance.SetActivePromotionUI(true);
 			BoardManager.Instance.SetActiveAllPieces(false);
 
@@ -389,7 +389,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			promotionUITaskCancellationTokenSource = null;
 			return true;
 		}
-		else if (specialMove.IsPromotionMove) // PromotionPiece is not null
+		else if (specialMove.IsPromotionMove()) // PromotionPiece is not null
 		{ 
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.Start);
 			BoardManager.Instance.TryDestroyVisualPiece(specialMove.End);
@@ -428,16 +428,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			return;
 		}
 
-		if (move.IsPromotionMove) {
+		if (move.IsPromotionMove()) {
 			move.SetPromotionPiece(promotionPiece);
 		}
 
-		if ((!move.IsSpecialMove || await TryHandleSpecialMoveBehaviourAsync(move))
+		if ((!move.IsSpecialMove() || await TryHandleSpecialMoveBehaviourAsync(move))
 		    && TryExecuteMove(move)
 		) {
-			if (!move.IsSpecialMove) { BoardManager.Instance.TryDestroyVisualPiece(move.End); }
+			if (!move.IsSpecialMove()) { BoardManager.Instance.TryDestroyVisualPiece(move.End); }
 
-			if (move.IsPromotionMove) {
+			if (move.IsPromotionMove()) {
 				movedPieceTransform = BoardManager.Instance.GetPieceGOAtPosition(move.End).transform;
 			}
 

@@ -79,13 +79,13 @@ namespace UnityChess.StrategicAI
 				{
 					if (piece is Pawn)
 					{
-						if (move.IsEnPassantMove)
+						if (move.IsEnPassantMove())
 						{
 							isCapturePossible = true;
 							capturingMoves.Add(new MovementWithSide(currentSide, move));
 							continue; // en passant cannot end in promotion, but is a capturing move
 						}
-						if (move.IsPromotionMove)
+						if (move.IsPromotionMove())
 						{// pawn promotes: pick a promotion for it
 							move.SetPromotionPiece(new Queen(currentSide));
 						}

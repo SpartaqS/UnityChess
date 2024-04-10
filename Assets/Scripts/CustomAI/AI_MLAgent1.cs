@@ -148,8 +148,8 @@ namespace UnityChess.StrategicAI
 				return;
 			}
 			
-			bool isLegalMoveAPromotionMove = move.IsPromotionMove;
-			bool isChosenMoveAPromotionMove = chosenMove.IsPromotionMove;
+			bool isLegalMoveAPromotionMove = move.IsPromotionMove();
+			bool isChosenMoveAPromotionMove = chosenMove.IsPromotionMove();
 			if (isLegalMoveAPromotionMove != isChosenMoveAPromotionMove)
 			{
 				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
@@ -264,7 +264,7 @@ namespace UnityChess.StrategicAI
 			discreteActions[2] = move.End.File - 1;
 			discreteActions[3] = move.End.Rank - 1;
 			discreteActions[4] = 0;
-			if (move.IsPromotionMove)
+			if (move.IsPromotionMove())
 			{
 				Piece promotionPiece = PromotionUtil.GeneratePromotionPiece(move.PromotionPiece, move.PromotionPieceSide);
 				GetPieceEnum(promotionPiece, out PieceEnum pieceEnum);

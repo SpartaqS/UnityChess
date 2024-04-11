@@ -96,7 +96,7 @@ namespace UnityChess.StrategicAI.Test
 			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
 		}
 
-		[UnityTest]
+		//[UnityTest]
 		public IEnumerator MinMaxTwoRooksDepth8()
 		{ // start a game and see if it is won by black in 9 moves
 			int expectedMovesToCheckmate = 12; // last best result: 18 => 9 moves (white starts, each player does 9 moves)

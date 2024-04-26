@@ -263,7 +263,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
 				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.White, whiteUciEngineCustomSettings);
+				//whiteUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.White, whiteUciEngineCustomSettings);
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MCTS), Side.White, whiteUciEngineCustomSettings);
 #endif
 				if (whiteUciEngine.CanRequestRestart())
 				{
@@ -283,7 +284,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
-				blackUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.Black, blackUciEngineCustomSettings);
+				//blackUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.Black, blackUciEngineCustomSettings);
+				blackUciEngine = CreateAIPlayer(typeof(AI_MCTS), Side.Black, blackUciEngineCustomSettings);
 #endif
 				if (blackUciEngine.CanRequestRestart())
 				{

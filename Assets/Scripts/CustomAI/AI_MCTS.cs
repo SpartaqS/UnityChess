@@ -233,12 +233,24 @@ namespace UnityChess.StrategicAI
 		/// <returns>-1 : loss of starting player; 0 : tie; 1: win of the starting player</returns>
 		private int Simulate(Node node)
 		{
-			int result = SimulateStep(node.ExecutedMove, maxStepsPerPlayout);
+
+			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+			{
+				throw new System.Exception("currentGame: could not retrieve currentConditions");
+			}
+
+			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			{
+				throw new System.Exception("currentGame: could not retrieve currentBoard");
+			}
+
+			Game simulationGame = new Game(currentConditions, currentBoard);
+			int result = SimulateStep(simulationGame, node.ExecutedMove, maxStepsPerPlayout);
 			Backpropagate(node, result);
 			return result;
 		}
 
-		private int SimulateStep(Movement performedMove, int stepsLeft)
+		private int SimulateStep(Game simulationGame, Movement performedMove, int stepsLeft)
 		{
 			if(stepsLeft < 1)
 			{
@@ -249,12 +261,12 @@ namespace UnityChess.StrategicAI
 			}
 
 			// get possible moves by the player whose move it is after the performedMove
-			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+			if (!simulationGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 			{
 				throw new System.Exception("simulationGame: could not retrieve currentConditions");
 			}
 
-			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			if (!simulationGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
 			{
 				throw new System.Exception("simulationGame: could not retrieve currentBoard");
 			}
@@ -263,7 +275,7 @@ namespace UnityChess.StrategicAI
 			// Detect checkmate and stalemate when no legal moves are available
 			if (possibleMovesPerPiece == null)
 			{
-				currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
+				simulationGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 				if (latestHalfMove.CausedCheckmate) // the player who moved checkmated the "current" player
 				{
 					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} checkmated with {stepsLeft} steps left");
@@ -279,10 +291,8 @@ namespace UnityChess.StrategicAI
 			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
 			int randomMoveIndex = Random.Range(0, movements.Count - 1);
 			Movement chosenMove = movements[randomMoveIndex];
-			currentGame.TryExecuteMove(chosenMove);
-			int simulationResult = -SimulateStep(chosenMove, stepsLeft - 1); // -1 because the result is returned from the berspective of the player whose move it is after executing chosenMove;
-			currentGame.ResetGameToHalfMoveIndex((System.Math.Max(-1, currentGame.HalfMoveTimeline.HeadIndex - 1)));
-			return simulationResult;
+			simulationGame.TryExecuteMove(chosenMove);
+			return -SimulateStep(simulationGame, chosenMove, stepsLeft - 1); // -1 because the result is returned from the berspective of the player whose move it is after executing chosenMove;
 		}
 
 		private void Backpropagate(Node node, int score)

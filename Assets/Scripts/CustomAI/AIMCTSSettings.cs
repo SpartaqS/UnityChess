@@ -6,12 +6,12 @@ namespace UnityChess.StrategicAI
 	[CreateAssetMenu(menuName = "StrategicAI/AIMCTSSettings")]
 	public class AIMCTSSettings : UCIEngineCustomSettings
 	{
-		public int LeavesToExplore = 1;
+		public int LeafsToExplore = 1;
 		public int PlayoutsPerLeaf = 1;
 
 		public AIMCTSSettings(int leavesToExplore, int playoutsPerLeaf)
 		{
-			LeavesToExplore = leavesToExplore;
+			LeafsToExplore = leavesToExplore;
 			PlayoutsPerLeaf = playoutsPerLeaf;
 		}
 	}

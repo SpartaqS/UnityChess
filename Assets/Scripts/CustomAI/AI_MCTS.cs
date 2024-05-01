@@ -1,4 +1,5 @@
-#define DEBUG
+//#define DEBUG
+#define DEBUG_MCTS_SIMPLE
 //#define USE_MOVE_ORDERING
 
 using System.Collections;
@@ -41,13 +42,16 @@ namespace UnityChess.StrategicAI
 		/// <param name="customSettings"></param>
 		void IUCIEngineWithCustomSettings.ApplyCustomSettings(UCIEngineCustomSettings customSettings)
 		{
-			if (!typeof(AIMinMaxSettings).IsAssignableFrom(customSettings.GetType()))
-				throw new System.InvalidOperationException("Provided custom settings are not for MinMax Strategic AI");
+			if (!typeof(AIMCTSSettings).IsAssignableFrom(customSettings.GetType()))
+				throw new System.InvalidOperationException("Provided custom settings are not for MCTS Strategic AI");
 
 			AIMCTSSettings customSettingsToApply = (AIMCTSSettings)customSettings;
 
 			playoutsPerLeaf = customSettingsToApply.PlayoutsPerLeaf;
+			leafsToExplore = customSettingsToApply.LeafsToExplore;
 		}
+
+		readonly int maxStepsPerPlayout = 100;
 
 		bool IUCIEngine.CanRequestRestart()
 		{
@@ -91,7 +95,7 @@ namespace UnityChess.StrategicAI
 
 			//TODO implement timeout
 			InitDebugInfo();
-			selectedMovement = MCTS();
+			selectedMovement = MCTS(playoutsPerLeaf, leafsToExplore);
 
 			await Task.Run(async () => { while (selectedMovement == null) await Task.Delay(10); });
 			Movement bestMove = selectedMovement;
@@ -109,54 +113,188 @@ namespace UnityChess.StrategicAI
 
 		// Diagnostics
 		//public SearchDiagnostics searchDiagnostics;
-		int leavesEvaluated;
+		int leafsEvaluated;
 		//int numTranspositions;
 		System.Diagnostics.Stopwatch searchStopwatch;
 		void InitDebugInfo()
 		{
 			searchStopwatch = System.Diagnostics.Stopwatch.StartNew();
-			leavesEvaluated = 0;
+			leafsEvaluated = 0;
 		}
 
 		void LogDebugInfo()
 		{
-			string debugLog = $"Selected move: {selectedMovement}\nMove search time: {searchStopwatch.ElapsedMilliseconds}\nleavesEvaluated: {leavesEvaluated}";
+			string debugLog = $"Selected move: {selectedMovement}\nMove search time: {searchStopwatch.ElapsedMilliseconds}\nleavesEvaluated: {leafsEvaluated}";
 			Debug.Log(debugLog);
 		}
 
-		protected List<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece)
+		private Movement MCTS(int playoutsPerLeaf, int leafsToExplore)
 		{
-			List<Movement> movements = new List<Movement>();
-
-			foreach (Piece piece in possibleMovesPerPiece.Keys)
+			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 			{
-				foreach (Movement move in possibleMovesPerPiece[piece].Values)
-				{
-					if (piece is Pawn)
-					{
-						if (move is PromotionMove)          // TODO: generate moves with promotions for each piece type that can be obtained via a promotion
-						{// pawn promotes: pick a promotion for it
-							Side currentSide = piece.Owner;
-							(move as PromotionMove).SetPromotionPiece(new Queen(currentSide));
-							movements.Add(move);
-							continue;
-						}
+				throw new System.Exception("currentGame: could not retrieve currentConditions");
+			}
 
+			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			{
+				throw new System.Exception("currentGame: could not retrieve currentBoard");
+			}
+
+			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+
+			//TODO: do the actual algorithm here
+			Random.InitState(0);
+			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
+			Node root = new Node(null, currentConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
+
+			//TEMP (should use a random one within some tolerance to control difficulty)
+			int bestResult = -2 * playoutsPerLeaf;
+#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
+			int bestResultPlayouts = -1;
+			int bestResultWins = -2 * playoutsPerLeaf;
+#endif
+			Movement bestMove = null;
+
+			List<int> randomNodeIndexesToExplore = GenerateRandomIntegers(0, movements.Count - 1, leafsToExplore);
+
+	
+			foreach (int randomMoveIndex in randomNodeIndexesToExplore) 
+			{
+				int totalResult = 0;
+				int totalPlayouts = 0;
+#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
+				int wins = 0;
+#endif
+				Movement currentMove = movements[randomMoveIndex];
+				for (int i = 0; i < playoutsPerLeaf; i++)
+				{
+					Node currentPlayerRandomNode = new Node(root, currentConditions.SideToMove, currentMove);
+					root.AddChild(currentPlayerRandomNode);
+
+					int result = Simulate(currentPlayerRandomNode);
+					totalResult += result;
+					totalPlayouts++;
+#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
+					if (result > 0)
+					{
+						wins++;
 					}
-					movements.Add(move);
+#endif
+
+#if DEBUG_MCTS
+					string resultText;
+					switch (result)
+					{
+						case -1:
+							resultText = "loss";
+							break;
+						case 0:
+							resultText = "stalemate";
+							break;
+						case 1:
+							resultText = "win";
+							break;
+						default:
+							resultText = "UNDEFINED";
+							break;
+					}
+					Debug.Log($"simulation ended in: {resultText}");
+#endif
+				}
+
+#if DEBUG_MCTS
+				Debug.Log($"total result: {totalResult} ({totalPlayouts} playouts, ({wins} wins) ");
+#endif
+				if (totalResult > bestResult)
+				{
+					bestMove = currentMove;
+					bestResult = totalResult;
+#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
+					bestResultPlayouts = totalPlayouts;
+					bestResultWins = wins;
+#endif
 				}
 			}
 
-			// TODO: order the movements list to speed up search
-			return movements;
+#if DEBUG || DEBUG_MCTS_SIMPLE
+			Debug.Log($"best result: {bestResult} ({bestResultPlayouts} playouts, ({bestResultWins} wins) ");
+#endif
+			return bestMove;
 		}
 
 		private Node root;
 		private int playoutsPerLeaf;
+		private int leafsToExplore;
 
+		/// <summary>
+		/// Runs a single game to the end, starting from the current game state in node
+		/// </summary>
+		/// <param name="node"></param>
+		/// <returns>-1 : loss of starting player; 0 : tie; 1: win of the starting player</returns>
 		private int Simulate(Node node)
 		{
-			// use GameManager with the current board in node to run a simulation
+
+			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+			{
+				throw new System.Exception("currentGame: could not retrieve currentConditions");
+			}
+
+			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			{
+				throw new System.Exception("currentGame: could not retrieve currentBoard");
+			}
+
+			Game simulationGame = new Game(currentConditions, currentBoard);
+			int result = SimulateStep(simulationGame, node.ExecutedMove, maxStepsPerPlayout);
+			Backpropagate(node, result);
+			return result;
+		}
+
+		private int SimulateStep(Game simulationGame, Movement performedMove, int stepsLeft)
+		{
+			if(stepsLeft < 1)
+			{
+#if DEBUG_MCTS
+				Debug.Log($"AI_MCTS: {maxStepsPerPlayout} steps and no result");
+#endif
+				return 0;
+			}
+
+			// get possible moves by the player whose move it is after the performedMove
+			if (!simulationGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+			{
+				throw new System.Exception("simulationGame: could not retrieve currentConditions");
+			}
+
+			if (!simulationGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			{
+				throw new System.Exception("simulationGame: could not retrieve currentBoard");
+			}
+
+			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+			// Detect checkmate and stalemate when no legal moves are available
+			if (possibleMovesPerPiece == null)
+			{
+				simulationGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
+				if (latestHalfMove.CausedCheckmate) // the player who moved checkmated the "current" player
+				{
+					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} checkmated with {stepsLeft} steps left");
+					return -1;
+				}
+				else //(latestHalfMove.CausedStalemate)
+				{
+					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} stalemated with {stepsLeft} steps left");
+					return 0;
+				}
+			}
+			// moves are possible: pick a random one and execute it
+			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
+			int randomMoveIndex = Random.Range(0, movements.Count - 1);
+			Movement chosenMove = movements[randomMoveIndex];
+			simulationGame.TryExecuteMove(chosenMove);
+			int simulationResult = -SimulateStep(simulationGame, chosenMove, stepsLeft - 1); // -1 because the result is returned from the berspective of the player whose move it is after executing chosenMove;
+			simulationGame.ResetGameToHalfMoveIndex((System.Math.Max(-1, simulationGame.HalfMoveTimeline.HeadIndex - 1)));
+			return simulationResult;
 		}
 
 		private void Backpropagate(Node node, int score)
@@ -188,7 +326,7 @@ namespace UnityChess.StrategicAI
 			return 0;
 		}
 
-		#region Tree
+#region Tree
 		public class Node
 		{
 			public int Visits { get; set; }
@@ -206,13 +344,14 @@ namespace UnityChess.StrategicAI
 				Children = new List<Node>();
 			}
 
-			public Node(Node parent, Side side)
+			public Node(Node parent, Side side, Movement executedMove)
 			{
 				Parent = parent;
 				Visits = 0;
 				Score = 0;
 				Children = new List<Node>();
 				Side = side;
+				ExecutedMove = executedMove;
 			}
 
 			// Add child to the node
@@ -250,6 +389,52 @@ namespace UnityChess.StrategicAI
 			}
 		}
 
-		#endregion
+#endregion
+
+#region Tools
+		private List<int> GenerateRandomIntegers(int a, int b, int n)
+		{
+			List<int> result = new List<int>();
+
+			if (n > b - a + 1)
+			{
+				for (int i = a; i <= b; i++)
+				{
+					result.Add(i);
+				}
+				Shuffle(result);
+			}
+			else
+			{
+				HashSet<int> set = new HashSet<int>();
+				while (result.Count < n)
+				{
+					int num = Random.Range(a, b + 1);
+					if (!set.Contains(num))
+					{
+						set.Add(num);
+						result.Add(num);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		// Fisher-Yates shuffle algorithm to shuffle the list
+		void Shuffle<T>(List<T> list)
+		{
+			int n = list.Count;
+			while (n > 1)
+			{
+				n--;
+				int k = Random.Range(0, n + 1);
+				T value = list[k];
+				list[k] = list[n];
+				list[n] = value;
+			}
+		}
+
+#endregion
 	}
 }

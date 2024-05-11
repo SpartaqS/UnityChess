@@ -130,22 +130,20 @@ namespace UnityChess.StrategicAI
 
 		private Movement MCTS(int playoutsPerLeaf, int leafsToExplore)
 		{
-			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions initialConditions))
 			{
 				throw new System.Exception("currentGame: could not retrieve currentConditions");
 			}
 
-			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			if (!currentGame.BoardTimeline.TryGetCurrent(out Board initialBoard))
 			{
 				throw new System.Exception("currentGame: could not retrieve currentBoard");
 			}
 
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
-
 			//TODO: do the actual algorithm here
 			Random.InitState(0);
-			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
-			Node root = new Node(null, currentConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
+
+			Node root = new Node(null, initialConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
 
 			//TEMP (should use a random one within some tolerance to control difficulty)
 			int bestResult = -2 * playoutsPerLeaf;
@@ -155,25 +153,70 @@ namespace UnityChess.StrategicAI
 #endif
 			Movement bestMove = null;
 
-			List<int> randomNodeIndexesToExplore = GenerateRandomIntegers(0, movements.Count - 1, leafsToExplore);
-
-	
-			foreach (int randomMoveIndex in randomNodeIndexesToExplore) 
-			{
-				int totalResult = 0;
-				int totalPlayouts = 0;
+			int totalResult = 0;
+			int totalPlayouts = 0;
 #if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-				int wins = 0;
+			int wins = 0;
 #endif
-				Movement currentMove = movements[randomMoveIndex];
-				for (int i = 0; i < playoutsPerLeaf; i++)
-				{
-					Node currentPlayerRandomNode = new Node(root, currentConditions.SideToMove, currentMove);
-					root.AddChild(currentPlayerRandomNode);
 
-					int result = Simulate(currentPlayerRandomNode);
+			for (int i = 0; i < leafsToExplore; i++) 
+			{
+				currentGame = new Game(initialConditions, initialBoard); // reset the working copy of Game
+				Node currentNode = root;// new Node(root, currentConditions.SideToMove, currentMove);
+
+				//TODO START
+				
+				// Select
+				while (!currentNode.IsLeaf())
+				{
+					currentNode = currentNode.SelectChild();
+					currentGame.TryExecuteMove(currentNode.ExecutedMove);
+				}
+				// Expand
+				if (currentNode.IsLeaf()) //always true the time
+				{// add all possible moves to the list and pick a random one to actually simulate
+
+					if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+					{
+						throw new System.Exception("currentGame: could not retrieve currentConditions");
+					}
+
+					if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+					{
+						throw new System.Exception("currentGame: could not retrieve currentBoard");
+					}
+
+					Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+					List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
+					Movement examinedMove = PickRandomMove(movements);
+
+					movements.Remove(examinedMove);
+					foreach(Movement uncheckedMove in movements)
+					{
+						Node uncheckedNode = new Node(currentNode, currentNode.Side.Complement(), uncheckedMove);
+						currentNode.AddChild(uncheckedNode);
+					}
+
+					// add node for examinedMove and switch to it for simulations
+					Node examinedNode = new Node(currentNode, currentNode.Side.Complement(), examinedMove);
+					currentNode.AddChild(examinedNode);
+
+					currentNode = examinedNode;
+				}
+
+				//TODO END
+
+				for (int j = 0; j < playoutsPerLeaf; j++)
+				{
+					// Simulate
+					int result = -Simulate(currentNode);
+
+					// Backpropagate
+					Backpropagate(currentNode, result);
+
 					totalResult += result;
 					totalPlayouts++;
+
 #if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
 					if (result > 0)
 					{
@@ -205,20 +248,19 @@ namespace UnityChess.StrategicAI
 #if DEBUG_MCTS
 				Debug.Log($"total result: {totalResult} ({totalPlayouts} playouts, ({wins} wins) ");
 #endif
-				if (totalResult > bestResult)
-				{
-					bestMove = currentMove;
-					bestResult = totalResult;
-#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-					bestResultPlayouts = totalPlayouts;
-					bestResultWins = wins;
-#endif
-				}
 			}
 
+			// end of examinations: pick move with best score
+
+			Node bestNode = root.SelectBestScoredChild();
+			bestMove = bestNode.ExecutedMove;
+
+
 #if DEBUG || DEBUG_MCTS_SIMPLE
-			Debug.Log($"best result: {bestResult} ({bestResultPlayouts} playouts, ({bestResultWins} wins) ");
+			Debug.Log($"best result: {bestNode.Score} ({bestNode.Visits} playouts)");
 #endif
+
+			
 			return bestMove;
 		}
 
@@ -246,13 +288,12 @@ namespace UnityChess.StrategicAI
 
 			Game simulationGame = new Game(currentConditions, currentBoard);
 			int result = SimulateStep(simulationGame, node.ExecutedMove, maxStepsPerPlayout);
-			Backpropagate(node, result);
 			return result;
 		}
 
 		private int SimulateStep(Game simulationGame, Movement performedMove, int stepsLeft)
 		{
-			if(stepsLeft < 1)
+			if (stepsLeft < 1)
 			{
 #if DEBUG_MCTS
 				Debug.Log($"AI_MCTS: {maxStepsPerPlayout} steps and no result");
@@ -289,10 +330,16 @@ namespace UnityChess.StrategicAI
 			}
 			// moves are possible: pick a random one and execute it
 			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
-			int randomMoveIndex = Random.Range(0, movements.Count - 1);
-			Movement chosenMove = movements[randomMoveIndex];
+			Movement chosenMove = PickRandomMove(movements);
 			simulationGame.TryExecuteMove(chosenMove);
 			return -SimulateStep(simulationGame, chosenMove, stepsLeft - 1); // -1 because the result is returned from the berspective of the player whose move it is after executing chosenMove;
+		}
+
+		private Movement PickRandomMove(List<Movement> movements)
+		{
+			int randomMoveIndex = Random.Range(0, movements.Count - 1);
+			Movement chosenMove = movements[randomMoveIndex];
+			return chosenMove;
 		}
 
 		private void Backpropagate(Node node, int score)
@@ -304,26 +351,6 @@ namespace UnityChess.StrategicAI
 			}
 		}
 
-		// Example: Check if the game is finished
-		private bool IsGameFinished()
-		{
-			// Implementation based on your game rules
-			return false;
-		}
-
-		// Example: Make a random move
-		private void MakeRandomMove()
-		{
-			// Implementation based on your game rules
-		}
-
-		// Example: Get the game result
-		private int GetGameResult()
-		{
-			// Implementation based on your game rules
-			return 0;
-		}
-
 #region Tree
 		public class Node
 		{
@@ -332,8 +359,11 @@ namespace UnityChess.StrategicAI
 			public Node Parent { get; set; }
 			public List<Node> Children { get; set; }
 			public Side Side { get; set; } // player whose move was executed
+			//public List<Movement> UncheckedMoves { get => uncheckedMoves; }
 
 			public Movement ExecutedMove; // move that caused this position
+
+			//private List<Movement> uncheckedMoves; // moves that were not explored yet (empty when node is a leaf)
 
 			public Node()
 			{
@@ -350,7 +380,19 @@ namespace UnityChess.StrategicAI
 				Children = new List<Node>();
 				Side = side;
 				ExecutedMove = executedMove;
+				//uncheckedMoves = new List<Movement>();
 			}
+
+			//public Node(Node parent, Side side, Movement executedMove, List<Movement> uncheckedMoves)
+			//{
+			//	Parent = parent;
+			//	Visits = 0;
+			//	Score = 0;
+			//	Children = new List<Node>();
+			//	Side = side;
+			//	ExecutedMove = executedMove;
+			//	this.uncheckedMoves = uncheckedMoves;
+			//}
 
 			// Add child to the node
 			public void AddChild(Node child)
@@ -363,6 +405,18 @@ namespace UnityChess.StrategicAI
 			{
 				return Children.Count == 0;
 			}
+
+			//// When node was selected at least once, we want to add all possible moves for future considerations
+			//public void SetUncheckedMoves(List<Movement> uncheckedMoves)
+			//{
+			//	this.uncheckedMoves = uncheckedMoves;
+			//}
+
+			//public bool IsFullyExplored()
+			//{
+			//	// check if there are any moves left to be explored
+			//	return UncheckedMoves.Count < 1;
+			//}
 
 			// Calculate the Upper Confidence Bound (UCB) for this node
 			public double UCB(int totalVisits)
@@ -377,6 +431,11 @@ namespace UnityChess.StrategicAI
 			public Node SelectChild()
 			{
 				return Children.OrderByDescending(c => c.UCB(Visits)).First();
+			}
+
+			public Node SelectBestScoredChild()
+			{
+				return Children.OrderByDescending(c => c.Score).First();
 			}
 
 			// Update the node's score and visits

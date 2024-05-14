@@ -1,8 +1,8 @@
 ﻿// MLAgents definitions
 //#define TRAIN_WHITE_AI
 //#define TRAIN_BLACK_AI
-//#define BLACK_HUMAN_VS_AI
-#define WHITE_HUMAN_VS_AI
+#define BLACK_HUMAN_VS_AI
+//#define WHITE_HUMAN_VS_AI
 //#define AI_TEST
 //#define DEBUG_VIEW
 #if TRAIN_WHITE_AI
@@ -117,14 +117,24 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	[SerializeField] bool startNewGameInStart = false; // in tests we do not want to start a game when initializing the GameManager
 	[SerializeField] bool useCustomStartBoard = false;
 	[SerializeField] (Square, Piece)[] customStartingPositionPieces = {
-			(new Square("e2"), new King(Side.White)),
-			
+			(new Square("h2"), new King(Side.Black)),
 
-			(new Square("a8"), new Rook(Side.Black)),
-			(new Square("b6"), new King(Side.Black)),
-			(new Square("b7"), new Rook(Side.Black)),
+
+			(new Square("a6"), new Rook(Side.White)),
+			(new Square("b8"), new King(Side.White)),
+			(new Square("c8"), new Rook(Side.White)),
 		};
 
+	//[SerializeField]
+	//(Square, Piece)[] customStartingPositionPieces = {
+	//		(new Square("e2"), new King(Side.White)),
+
+
+	//		(new Square("a8"), new Rook(Side.Black)),
+	//		(new Square("b6"), new King(Side.Black)),
+	//		(new Square("b7"), new Rook(Side.Black)),
+	//	};
+	
 	//[SerializeField]
 	//(Square, Piece)[] customStartingPositionPieces = {
 	//		(new Square("h7"), new King(Side.White)),

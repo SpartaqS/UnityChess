@@ -35,6 +35,10 @@ namespace UnityChess.StrategicAI
 #endif
 		// AI settings
 
+#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
+		int debug_wins = 0;
+		int debug_losses = 0;
+#endif
 
 		/// <summary>
 		/// Apply settings which directly affect the algorithm used
@@ -156,7 +160,8 @@ namespace UnityChess.StrategicAI
 			int totalResult = 0;
 			int totalPlayouts = 0;
 #if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-			int wins = 0;
+			debug_wins = 0;
+			debug_losses = 0;
 #endif
 
 			for (int i = 0; i < leafsToExplore; i++) 
@@ -165,43 +170,45 @@ namespace UnityChess.StrategicAI
 				Node currentNode = root;// new Node(root, currentConditions.SideToMove, currentMove);
 
 				//TODO START
-				
+
+				int leafExpandMultiplier = 1;
+
 				// Select
 				while (!currentNode.IsLeaf())
 				{
 					currentNode = currentNode.SelectChild();
 					currentGame.TryExecuteMove(currentNode.ExecutedMove);
 				}
+
 				// Expand
 				if (currentNode.IsLeaf()) //always true the time
 				{// add all possible moves to the list and pick a random one to actually simulate
-
-					if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+					if (!currentGame.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece))// Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
 					{
-						throw new System.Exception("currentGame: could not retrieve currentConditions");
+						throw new System.Exception("currentGame: could not retrieve possibleMovesPerPiece");
 					}
 
-					if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+					if(possibleMovesPerPiece != null) // reached a non-terminal node
 					{
-						throw new System.Exception("currentGame: could not retrieve currentBoard");
-					}
+						List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
+						Movement examinedMove = PickRandomMove(movements);
 
-					Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
-					List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
-					Movement examinedMove = PickRandomMove(movements);
+						movements.Remove(examinedMove);
+						foreach (Movement uncheckedMove in movements)
+						{
+							Node uncheckedNode = new Node(currentNode, currentNode.Side.Complement(), uncheckedMove);
+							currentNode.AddChild(uncheckedNode);
+						}
 
-					movements.Remove(examinedMove);
-					foreach(Movement uncheckedMove in movements)
-					{
-						Node uncheckedNode = new Node(currentNode, currentNode.Side.Complement(), uncheckedMove);
-						currentNode.AddChild(uncheckedNode);
-					}
+						// add node for examinedMove and switch to it for simulations
+						Node examinedNode = new Node(currentNode, currentNode.Side.Complement(), examinedMove);
+						currentNode.AddChild(examinedNode);
 
-					// add node for examinedMove and switch to it for simulations
-					Node examinedNode = new Node(currentNode, currentNode.Side.Complement(), examinedMove);
-					currentNode.AddChild(examinedNode);
+						currentNode = examinedNode;
+						currentGame.TryExecuteMove(currentNode.ExecutedMove);
 
-					currentNode = examinedNode;
+						leafExpandMultiplier = -1;
+					} // else: reached terminal node: only "simulate" (get instant result) and backpropagate					
 				}
 
 				//TODO END
@@ -209,20 +216,13 @@ namespace UnityChess.StrategicAI
 				for (int j = 0; j < playoutsPerLeaf; j++)
 				{
 					// Simulate
-					int result = -Simulate(currentNode);
+					int result = leafExpandMultiplier * Simulate(currentNode);
 
 					// Backpropagate
 					Backpropagate(currentNode, result);
 
 					totalResult += result;
 					totalPlayouts++;
-
-#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-					if (result > 0)
-					{
-						wins++;
-					}
-#endif
 
 #if DEBUG_MCTS
 					string resultText;
@@ -246,7 +246,7 @@ namespace UnityChess.StrategicAI
 				}
 
 #if DEBUG_MCTS
-				Debug.Log($"total result: {totalResult} ({totalPlayouts} playouts, ({wins} wins) ");
+				Debug.Log($"total result: {totalResult} ({totalPlayouts} playouts, ({debug_wins} wins) ");
 #endif
 			}
 
@@ -257,7 +257,7 @@ namespace UnityChess.StrategicAI
 
 
 #if DEBUG || DEBUG_MCTS_SIMPLE
-			Debug.Log($"best result: {bestNode.Score} ({bestNode.Visits} playouts)");
+			Debug.Log($"best result: {bestNode.Score} ({bestNode.Visits} playouts) [{debug_wins} total wins]");
 #endif
 
 			
@@ -286,12 +286,13 @@ namespace UnityChess.StrategicAI
 				throw new System.Exception("currentGame: could not retrieve currentBoard");
 			}
 
-			Game simulationGame = new Game(currentConditions, currentBoard);
-			int result = SimulateStep(simulationGame, node.ExecutedMove, maxStepsPerPlayout);
-			return result;
+			int simulationMultiplier = (currentConditions.SideToMove == controlledSide ? 1 : -1); // adjust result for the simulation
+			int result = SimulateStep(node.ExecutedMove, maxStepsPerPlayout); // if the making ExecutedMove is a checkmate, the result is 1 so we need to interpret it as a win
+			return simulationMultiplier * result;
 		}
 
-		private int SimulateStep(Game simulationGame, Movement performedMove, int stepsLeft)
+		// execute performedMove on simulationGame and see what happens
+		private int SimulateStep(Movement performedMove, int stepsLeft)
 		{
 			if (stepsLeft < 1)
 			{
@@ -302,22 +303,21 @@ namespace UnityChess.StrategicAI
 			}
 
 			// get possible moves by the player whose move it is after the performedMove
-			if (!simulationGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
+			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 			{
 				throw new System.Exception("simulationGame: could not retrieve currentConditions");
 			}
 
-			if (!simulationGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
+			if (!currentGame.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece))
 			{
-				throw new System.Exception("simulationGame: could not retrieve currentBoard");
+				throw new System.Exception("currentGame: could not retrieve possibleMovesPerPiece");
 			}
 
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
 			// Detect checkmate and stalemate when no legal moves are available
 			if (possibleMovesPerPiece == null)
 			{
-				simulationGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
-				if (latestHalfMove.CausedCheckmate) // the player who moved checkmated the "current" player
+				currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
+				if (latestHalfMove.CausedCheckmate) // the player who just moved checkmated the "current" player
 				{
 					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} checkmated with {stepsLeft} steps left");
 					return -1;
@@ -328,11 +328,11 @@ namespace UnityChess.StrategicAI
 					return 0;
 				}
 			}
-			// moves are possible: pick a random one and execute it
+			// moves are possible: pick a random one and simulate it
 			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
 			Movement chosenMove = PickRandomMove(movements);
-			simulationGame.TryExecuteMove(chosenMove);
-			return -SimulateStep(simulationGame, chosenMove, stepsLeft - 1); // -1 because the result is returned from the berspective of the player whose move it is after executing chosenMove;
+			currentGame.TryExecuteMove(chosenMove);
+			return -SimulateStep(chosenMove, stepsLeft - 1); // * -1 because the result is returned from the perspective of the player whose move it is after executing chosenMove;
 		}
 
 		private Movement PickRandomMove(List<Movement> movements)
@@ -348,10 +348,22 @@ namespace UnityChess.StrategicAI
 			{
 				node.Update(score);
 				node = node.Parent;
+				score = -score; // flip the perspective when moving up the tree (white's win is black's loss)
 			}
+
+#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
+			if (score < 0)
+			{
+				debug_wins++;
+			}
+			else if (score > 0)
+			{
+				debug_losses++;
+			}
+#endif
 		}
 
-#region Tree
+		#region Tree
 		public class Node
 		{
 			public int Visits { get; set; }
@@ -424,7 +436,16 @@ namespace UnityChess.StrategicAI
 				if (Visits == 0)
 					return double.MaxValue;
 				else
-					return Score / Visits + System.Math.Sqrt(2 * System.Math.Log(totalVisits) / Visits);
+					return (double)Score / (double)Visits + System.Math.Sqrt(2 * System.Math.Log(totalVisits) / (double)Visits);
+			}
+
+			// Get Score / Visists ratio (not used in UCB to avoid repeating if (Visits == 0) check
+			public double ScoreVisitRatio()
+			{
+				if (Visits == 0)
+					return double.MinValue;
+				else
+					return(double)Score / (double)Visits;
 			}
 
 			// Select the child with the highest UCB value
@@ -435,7 +456,7 @@ namespace UnityChess.StrategicAI
 
 			public Node SelectBestScoredChild()
 			{
-				return Children.OrderByDescending(c => c.Score).First();
+				return Children.OrderByDescending(c => c.ScoreVisitRatio()).First();
 			}
 
 			// Update the node's score and visits

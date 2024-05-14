@@ -38,12 +38,21 @@ namespace UnityChess.StrategicAI.Test
 		}
 
 		readonly (Square, Piece)[] twoRooksMatingTestBoard = {
-			(new Square("e2"), new King(Side.White)),
+			(new Square("h2"), new King(Side.Black)),
 
 
-			(new Square("a8"), new Rook(Side.Black)),
-			(new Square("b6"), new King(Side.Black)),
-			(new Square("b7"), new Rook(Side.Black)),
+			(new Square("a6"), new Rook(Side.White)),
+			(new Square("b8"), new King(Side.White)),
+			(new Square("c8"), new Rook(Side.White)),
+		};
+
+		readonly (Square, Piece)[] mateInOneStartingBoard = {
+			(new Square("h2"), new King(Side.Black)),
+
+
+			(new Square("a7"), new Rook(Side.White)),
+			(new Square("b2"), new King(Side.White)),
+			(new Square("g8"), new Rook(Side.White)),
 		};
 
 		[SetUp]
@@ -55,6 +64,31 @@ namespace UnityChess.StrategicAI.Test
 		}
 
 		[UnityTest]
+		public IEnumerator MCTSMateInOne()
+		{ // start a game and see if it is won by black in 7 moves
+			int expectedMovesToCheckmate = 1; // AI is expected to win in one move
+
+			SetupMateInOneTest();
+			
+			GameManager.Instance.StartNewGame(true, true);
+			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 15f, GameManager.Instance.PauseGame);
+			Assert.AreEqual(Side.White, winnerSide);
+			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
+		}
+
+		private void SetupMateInOneTest()
+		{
+			AIMCTSSettings bothAIsSettings = ScriptableObject.CreateInstance<AIMCTSSettings>();
+			bothAIsSettings.LeafsToExplore = 100;
+			bothAIsSettings.PlayoutsPerLeaf = 1;
+
+			GameManager.Instance.CustomStartingPositionPieces = mateInOneStartingBoard;
+			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
+			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;
+		}
+
+
+		[UnityTest]
 		public IEnumerator MCTSTwoRooks()
 		{ // start a game and see if it is won by black in 7 moves
 			int expectedMovesToCheckmate = 14; // last best result: 14 => 7 moves (white starts, each player does 7 moves)
@@ -63,13 +97,15 @@ namespace UnityChess.StrategicAI.Test
 			//TODO ensure the AIs are MinMaxes
 			GameManager.Instance.StartNewGame(true, true);
 			yield return new TestTools.WaitUntilForSeconds(() => gameEnded == true, 30f, GameManager.Instance.PauseGame);
-			Assert.AreEqual(Side.Black, winnerSide);
+			Assert.AreEqual(Side.White, winnerSide);
 			Assert.AreEqual(expectedMovesToCheckmate, movesExecutedByBothPlayers);
 		}
 
 		private void SetupTwoRooksTest()
 		{
 			AIMCTSSettings bothAIsSettings = ScriptableObject.CreateInstance<AIMCTSSettings>();
+			bothAIsSettings.LeafsToExplore = 100;
+			bothAIsSettings.PlayoutsPerLeaf = 1;
 
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
 			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;

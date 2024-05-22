@@ -215,7 +215,10 @@ namespace UnityChess.StrategicAI
 				return evaluation;
 			}
 
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+			if (!currentGame.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece))
+			{
+				throw new System.Exception("currentGame: could not retrieve possibleMovesPerPiece");
+			}
 			// Detect checkmate and stalemate when no legal moves are available
 			if (possibleMovesPerPiece == null)
 			{

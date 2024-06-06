@@ -2,8 +2,8 @@
 //#define TRAIN_WHITE_AI
 //#define TRAIN_BLACK_AI
 //#define BLACK_HUMAN_VS_AI
-#define WHITE_HUMAN_VS_AI
-//#define AI_TEST
+//#define WHITE_HUMAN_VS_AI
+#define AI_TEST
 //#define DEBUG_VIEW
 #if TRAIN_WHITE_AI
 #define AI_TEST

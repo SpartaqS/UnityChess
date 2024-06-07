@@ -80,12 +80,9 @@ namespace UnityChess.StrategicAI
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 				return null;
 
-			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
-				return null;
-
 			controlledSide = currentConditions.SideToMove;
 			selectedMovement = null;
-			currentGame = new Game(currentConditions, currentBoard);
+			currentGame = new Game(game);
 			transpositionTable.Clear();
 
 			//TODO implement timeout

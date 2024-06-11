@@ -172,6 +172,11 @@ namespace UnityChess.StrategicAI
 			{
 				throw new System.NullReferenceException("currentBoard is null");
 			}
+			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentGameConditions))
+			{
+				throw new System.NullReferenceException("currentBoard is null");
+			}
+
 			// translate board matrix to a sequence of ints
 			//string observationsStr = "\n";
 			for (int row = 1; row <= 8; row++)
@@ -192,6 +197,15 @@ namespace UnityChess.StrategicAI
 				}
 				//observationsStr += "\n";
 			}
+			// add GameConditions to observation space
+			sensor.AddObservation((int)currentGameConditions.SideToMove);
+			sensor.AddObservation(currentGameConditions.WhiteCanCastleKingside);
+			sensor.AddObservation(currentGameConditions.WhiteCanCastleQueenside);
+			sensor.AddObservation(currentGameConditions.BlackCanCastleKingside);
+			sensor.AddObservation(currentGameConditions.BlackCanCastleQueenside);
+			sensor.AddObservation(currentGameConditions.EnPassantSquare.File);
+			sensor.AddObservation(currentGameConditions.EnPassantSquare.Rank);
+
 			//Debug.Log("Observations collected:" + observationsStr);
 		}
 

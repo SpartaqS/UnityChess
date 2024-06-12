@@ -12,14 +12,14 @@ namespace UnityChess.StrategicAI
 {
 	public class AI_MLAgent1 : Agent,  IUCIEngine
 	{//TODO actually implement interfacing between Model and game
-		//protected bool keepTrainingAfterInvalidMove = true;
-		bool keepTrainingAfterInvalidMove = false;
+		//protected const bool keepTrainingAfterInvalidMove = true;
+		protected const bool keepTrainingAfterInvalidMove = false;
 		protected Game game;
 		protected Movement selectedMovement = null;
 		protected Side controlledSide = Side.None;
-		UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
+		protected UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
 		private void RequestRestartEndGame() { requestStartNewGame.Invoke(controlledSide, 1); }
-		private void RequestRestartTrainingFailure() 
+		protected virtual void RequestRestartTrainingFailure() 
 		{
 			AddReward(-1000f);
 			requestStartNewGame.Invoke(controlledSide, 2); 
@@ -193,7 +193,7 @@ namespace UnityChess.StrategicAI
 			}
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentGameConditions))
 			{
-				throw new System.NullReferenceException("currentBoard is null");
+				throw new System.NullReferenceException("currentGameConditions is null");
 			}
 
 			// translate board matrix to a sequence of ints
@@ -230,6 +230,11 @@ namespace UnityChess.StrategicAI
 
 		protected void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)
 		{
+			if(piece == null) 
+			{
+				finalPieceEnum = PieceEnum.Empty;
+				return;
+			}
 			// if Piece is black, then its enum value is negative
 			int isBlackMultiplier = piece.Owner == Side.Black ? -1 : 1;
 			PieceEnum pieceEnum = PieceEnum.Empty;

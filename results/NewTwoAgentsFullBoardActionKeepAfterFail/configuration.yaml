@@ -106,7 +106,7 @@ engine_settings:
   no_graphics: false
 environment_parameters: null
 checkpoint_settings:
-  run_id: NewTwoAgentsFullBoardAction
+  run_id: NewTwoAgentsFullBoardActionKeepAfterFail
   initialize_from: null
   load_model: false
   resume: true

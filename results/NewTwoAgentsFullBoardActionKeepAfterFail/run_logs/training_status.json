@@ -1,0 +1,114 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 2711,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-2711.onnx",
+                "reward": null,
+                "creation_time": 1718213654.5099058,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-2711.pt"
+                ]
+            },
+            {
+                "steps": 8397,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-8397.onnx",
+                "reward": -5317.0,
+                "creation_time": 1718215048.68304,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-8397.pt"
+                ]
+            },
+            {
+                "steps": 13687,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-13687.onnx",
+                "reward": null,
+                "creation_time": 1718216412.6882815,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-13687.pt"
+                ]
+            },
+            {
+                "steps": 23071,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-23071.onnx",
+                "reward": -3897.0,
+                "creation_time": 1718218775.6829643,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-23071.pt"
+                ]
+            },
+            {
+                "steps": 24818,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-24818.onnx",
+                "reward": null,
+                "creation_time": 1718219266.0550318,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-24818.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 24818,
+            "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1718219266.0550318,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\WhiteMLAgent\\WhiteMLAgent-24818.pt"
+            ]
+        }
+    },
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 2697,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-2697.onnx",
+                "reward": null,
+                "creation_time": 1718213664.2398636,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-2697.pt"
+                ]
+            },
+            {
+                "steps": 8350,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-8350.onnx",
+                "reward": -5266.0,
+                "creation_time": 1718215052.9135637,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-8350.pt"
+                ]
+            },
+            {
+                "steps": 22947,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-22947.onnx",
+                "reward": -3848.0,
+                "creation_time": 1718218824.289557,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-22947.pt"
+                ]
+            },
+            {
+                "steps": 24641,
+                "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-24641.onnx",
+                "reward": -5384.0,
+                "creation_time": 1718219272.4495926,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-24641.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 24641,
+            "file_path": "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent.onnx",
+            "reward": -5384.0,
+            "creation_time": 1718219272.4495926,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsFullBoardActionKeepAfterFail\\BlackMLAgent\\BlackMLAgent-24641.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

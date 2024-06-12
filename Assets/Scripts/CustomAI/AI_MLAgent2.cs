@@ -126,8 +126,10 @@ namespace UnityChess.StrategicAI
 			
 			if(invalidBoardPenalty < 5 && invalidBoardPenalty > 1) // highest possible diff in a legal change occurs when castling, diff == 0 -> no move, diff == 1 -> single piece swap
 			{
-				if(!keepTrainingAfterInvalidMove) //?? reduce the penalty to diffs between 2 and 4
+				if (!keepTrainingAfterInvalidMove) //?? reduce the penalty to diffs between 2 and 4
 					AddReward(90f);
+				else
+					AddReward(10f);
 #if DEBUG
 				Debug.Log($"Invalid decodedBoard (diff: {invalidBoardPenalty})\nInvalid decodedBoard:\n{decodedBoard.ToTextArt()}\nInvalid currentBoard:\n{currentBoard.ToTextArt()}");
 #endif

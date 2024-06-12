@@ -9,15 +9,24 @@
                 "auxillary_file_paths": [
                     "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-582.pt"
                 ]
+            },
+            {
+                "steps": 4356,
+                "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-4356.onnx",
+                "reward": -63.486486486486484,
+                "creation_time": 1718212760.5026212,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-4356.pt"
+                ]
             }
         ],
         "final_checkpoint": {
-            "steps": 582,
+            "steps": 4356,
             "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent.onnx",
-            "reward": -152.55844155844156,
-            "creation_time": 1718206632.419852,
+            "reward": -63.486486486486484,
+            "creation_time": 1718212760.5026212,
             "auxillary_file_paths": [
-                "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-582.pt"
+                "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-4356.pt"
             ]
         }
     },

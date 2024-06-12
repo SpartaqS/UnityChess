@@ -1,0 +1,51 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 2020,
+                "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-2020.onnx",
+                "reward": null,
+                "creation_time": 1718196471.6709952,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-2020.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2020,
+            "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1718196471.6709952,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-2020.pt"
+            ]
+        }
+    },
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 0,
+                "file_path": "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent\\BlackMLAgent-0.onnx",
+                "reward": null,
+                "creation_time": 1718196477.94227,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent\\BlackMLAgent-0.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 0,
+            "file_path": "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1718196477.94227,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent\\BlackMLAgent-0.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

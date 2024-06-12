@@ -258,7 +258,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			if (isWhiteAI)
 			{
 #if TRAIN_WHITE_AI || TRAIN_BOTH_AI
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent2), Side.White);
 #elif TRAIN_BLACK_AI
 				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
 #else
@@ -281,7 +282,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 #if TRAIN_WHITE_AI
 				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.Black);
 #elif TRAIN_BLACK_AI || TRAIN_BOTH_AI
-				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent2), Side.Black);
 #else
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));

@@ -12,11 +12,11 @@ namespace UnityChess.StrategicAI
 {
 	public class AI_MLAgent1 : Agent,  IUCIEngine
 	{//TODO actually implement interfacing between Model and game
-		bool keepTrainingAfterInvalidMove = true;
-		//bool keepTrainingAfterInvalidMove = false;
+		//protected bool keepTrainingAfterInvalidMove = true;
+		bool keepTrainingAfterInvalidMove = false;
 		protected Game game;
 		protected Movement selectedMovement = null;
-		Side controlledSide = Side.None;
+		protected Side controlledSide = Side.None;
 		UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
 		private void RequestRestartEndGame() { requestStartNewGame.Invoke(controlledSide, 1); }
 		private void RequestRestartTrainingFailure() 
@@ -95,7 +95,7 @@ namespace UnityChess.StrategicAI
 			// nothing to do at shutdown
 		}
 
-		public void DecodeMove(ActionBuffers actions, out Movement decodedMove, out bool actionIsValidMove)
+		public virtual void DecodeMove(ActionBuffers actions, out Movement decodedMove, out bool actionIsValidMove)
 		{
 
 			int startCol = actions.DiscreteActions[0];
@@ -228,7 +228,7 @@ namespace UnityChess.StrategicAI
 			//Debug.Log("Observations collected:" + observationsStr);
 		}
 
-		private void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)
+		protected void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)
 		{
 			// if Piece is black, then its enum value is negative
 			int isBlackMultiplier = piece.Owner == Side.Black ? -1 : 1;
@@ -259,6 +259,35 @@ namespace UnityChess.StrategicAI
 			}
 
 			finalPieceEnum = (PieceEnum)((int)pieceEnum * isBlackMultiplier);
+		}
+
+		protected Piece GetPieceFromEnum(PieceEnum pieceEnum)
+		{
+			if(pieceEnum == PieceEnum.Empty)
+			{
+				return null;
+			}
+			Side pieceSide = (int)pieceEnum < 0 ? Side.Black : Side.White;
+
+			PieceEnum normalizedPieceEnum =(PieceEnum)((int)pieceEnum * (pieceSide == Side.Black ? -1 : 1));
+
+			switch (normalizedPieceEnum)
+			{		
+				case PieceEnum.WhitePawn:
+					return new Pawn(pieceSide);
+				case PieceEnum.WhiteRook:
+					return new Rook(pieceSide);
+				case PieceEnum.WhiteKnight:
+					return new Knight(pieceSide);
+				case PieceEnum.WhiteBishop:
+					return new Bishop(pieceSide);
+				case PieceEnum.WhiteQueen:
+					return new Queen(pieceSide);
+				case PieceEnum.WhiteKing:
+					return new King(pieceSide);
+				default:
+					throw new System.Exception($"provided invalid PieceEnum int value: {(int)pieceEnum}");
+			}
 		}
 
 		// enums for clearer debugging

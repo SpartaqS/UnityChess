@@ -2,44 +2,44 @@
     "WhiteMLAgent": {
         "checkpoints": [
             {
-                "steps": 4409,
-                "file_path": "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-4409.onnx",
+                "steps": 64,
+                "file_path": "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-64.onnx",
                 "reward": null,
-                "creation_time": 1718191175.0311909,
+                "creation_time": 1718191544.4546123,
                 "auxillary_file_paths": [
-                    "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-4409.pt"
+                    "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-64.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 4409,
+            "steps": 64,
             "file_path": "results\\NewTwoAgentsTest\\WhiteMLAgent.onnx",
             "reward": null,
-            "creation_time": 1718191175.0311909,
+            "creation_time": 1718191544.4546123,
             "auxillary_file_paths": [
-                "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-4409.pt"
+                "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-64.pt"
             ]
         }
     },
     "BlackMLAgent": {
         "checkpoints": [
             {
-                "steps": 2833,
-                "file_path": "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-2833.onnx",
+                "steps": 64,
+                "file_path": "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-64.onnx",
                 "reward": null,
-                "creation_time": 1718191175.2037642,
+                "creation_time": 1718191544.6545575,
                 "auxillary_file_paths": [
-                    "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-2833.pt"
+                    "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-64.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 2833,
+            "steps": 64,
             "file_path": "results\\NewTwoAgentsTest\\BlackMLAgent.onnx",
             "reward": null,
-            "creation_time": 1718191175.2037642,
+            "creation_time": 1718191544.6545575,
             "auxillary_file_paths": [
-                "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-2833.pt"
+                "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-64.pt"
             ]
         }
     },

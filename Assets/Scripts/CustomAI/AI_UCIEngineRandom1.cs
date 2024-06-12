@@ -26,7 +26,7 @@ namespace UnityChess.StrategicAI
 
 
 			Movement bestMove = null;
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+			game.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece);
 			bool isCapturePossible = false;
 			List<MovementWithSide> capturingMoves, noncapturingMoves;
 			isCapturePossible = GetCaptureAndNonCaptureMoves(currentBoard, currentSide, possibleMovesPerPiece, isCapturePossible, out capturingMoves, out noncapturingMoves);
@@ -35,7 +35,7 @@ namespace UnityChess.StrategicAI
 
 			if (isCapturePossible)
 			{
-				if (Random.Range(0f, 1f) <= captureMoveChance)
+				if (Random.Range(0f, 1f) <= captureMoveChance || noncapturingMoves.Count < 1)
 				{
 					capturingMoves.Sort(new MovementWithSideComparer());
 					//allMovements.AddRange(capturingMoves);
@@ -47,6 +47,12 @@ namespace UnityChess.StrategicAI
 			noncapturingMoves.Sort(new MovementWithSideComparer());
 			//allMovements.AddRange(noncapturingMoves);
 			bestMove = PickRandomMovement(noncapturingMoves);
+
+			//if (bestMove is PromotionMove promotionMove && promotionMove.PromotionPiece == null)
+			//{
+			//	promotionMove.SetPromotionPiece(new Queen(currentSide));
+			//}
+
 			return bestMove;
 		}
 
@@ -55,6 +61,7 @@ namespace UnityChess.StrategicAI
 			Movement bestMove;
 			int chosenMoveIndex = Random.Range(0, allMovements.Count - 1);
 			bestMove = allMovements[chosenMoveIndex].Movement;
+			bool isPromotionMove = bestMove is PromotionMove;
 			return bestMove;
 		}
 	}

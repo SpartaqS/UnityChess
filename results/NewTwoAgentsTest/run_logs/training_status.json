@@ -1,0 +1,51 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 4409,
+                "file_path": "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-4409.onnx",
+                "reward": null,
+                "creation_time": 1718191175.0311909,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-4409.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 4409,
+            "file_path": "results\\NewTwoAgentsTest\\WhiteMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1718191175.0311909,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsTest\\WhiteMLAgent\\WhiteMLAgent-4409.pt"
+            ]
+        }
+    },
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 2833,
+                "file_path": "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-2833.onnx",
+                "reward": null,
+                "creation_time": 1718191175.2037642,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-2833.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2833,
+            "file_path": "results\\NewTwoAgentsTest\\BlackMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1718191175.2037642,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsTest\\BlackMLAgent\\BlackMLAgent-2833.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

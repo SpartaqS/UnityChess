@@ -1,13 +1,16 @@
 ﻿// MLAgents definitions
 //#define TRAIN_WHITE_AI
 //#define TRAIN_BLACK_AI
+#define TRAIN_BOTH_AI
 //#define BLACK_HUMAN_VS_AI
 //#define WHITE_HUMAN_VS_AI
-#define AI_TEST
+//#define AI_TEST
 //#define DEBUG_VIEW
 #if TRAIN_WHITE_AI
 #define AI_TEST
 #elif TRAIN_BLACK_AI
+#define AI_TEST
+#elif TRAIN_BOTH_AI
 #define AI_TEST
 #endif
 using System;
@@ -254,7 +257,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		if (isWhiteAI || isBlackAI) {
 			if (isWhiteAI)
 			{
-#if TRAIN_WHITE_AI
+#if TRAIN_WHITE_AI || TRAIN_BOTH_AI
 				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
 #elif TRAIN_BLACK_AI
 				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
@@ -277,12 +280,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			{
 #if TRAIN_WHITE_AI
 				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.Black);
-#elif TRAIN_BLACK_AI
+#elif TRAIN_BLACK_AI || TRAIN_BOTH_AI
 				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
 #else
 				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
 				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
 				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.Black);
 				blackUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.Black, blackUciEngineCustomSettings);
 #endif
 				if (blackUciEngine.CanRequestRestart())
@@ -341,7 +345,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		} else {
 			BoardManager.Instance.EnsureOnlyPiecesOfSideAreEnabled(SideToMove);
 		}
-
 		MoveExecutedEvent?.Invoke();
 
 		return true;

@@ -35,7 +35,7 @@ namespace UnityChess.StrategicAI
 
 			if (isCapturePossible)
 			{
-				if (Random.Range(0f, 1f) <= captureMoveChance)
+				if (Random.Range(0f, 1f) <= captureMoveChance || noncapturingMoves.Count < 1)
 				{
 					capturingMoves.Sort(new MovementWithSideComparer());
 					//allMovements.AddRange(capturingMoves);

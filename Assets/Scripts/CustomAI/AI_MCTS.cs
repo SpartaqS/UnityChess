@@ -144,8 +144,8 @@ namespace UnityChess.StrategicAI
 				throw new System.Exception("currentGame: could not retrieve currentBoard");
 			}
 
-			//TODO: do the actual algorithm here
-			Random.InitState(0);
+			// optional: set random seed to have reproducible decisions
+			//Random.InitState(0);
 
 			Node root = new Node(null, initialConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
 

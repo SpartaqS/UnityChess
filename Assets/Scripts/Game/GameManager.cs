@@ -92,6 +92,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	[SerializeField]
 	private UCIEngineCustomSettings blackUciEngineCustomSettings = null;
 
+	[SerializeField]
+	private UCIEngineCustomSettings minMaxDefaultSettings = null;
+	[SerializeField]
+	private UCIEngineCustomSettings mctsDefaultSettings = null;
+	
 	public void Start() {
 		VisualPiece.VisualPieceMoved += OnPieceMoved;
 
@@ -179,7 +184,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 				uciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), side);
 				break;
 			case AIType.MinMax:
-				uciEngine = CreateAIPlayer(typeof(AI_MinMax), side, selectedUCIEngineSettings);
+				uciEngine = CreateAIPlayer(typeof(AI_MinMax), side, selectedUCIEngineSettings == null ? minMaxDefaultSettings : selectedUCIEngineSettings );
+				break;
+			case AIType.MCTS:
+				uciEngine = CreateAIPlayer(typeof(AI_MCTS), side, selectedUCIEngineSettings == null ? mctsDefaultSettings : selectedUCIEngineSettings);
+				break;
+			case AIType.ReinforcementLearning:
+				uciEngine = CreateAIPlayer(typeof(AI_MLAgent1), side);
 				break;
 			case AIType.None:
 			default:
@@ -553,6 +564,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	{
 		None,
 		RandomAggressive,
-		MinMax
+		MinMax,
+		MCTS,
+		ReinforcementLearning
 	}
 }

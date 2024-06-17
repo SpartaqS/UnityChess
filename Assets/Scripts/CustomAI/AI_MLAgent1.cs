@@ -12,12 +12,14 @@ namespace UnityChess.StrategicAI
 {
 	public class AI_MLAgent1 : Agent,  IUCIEngine
 	{//TODO actually implement interfacing between Model and game
+		protected const bool keepTrainingAfterInvalidMove = true;
+		//protected const bool keepTrainingAfterInvalidMove = false;
 		protected Game game;
 		protected Movement selectedMovement = null;
-		Side controlledSide = Side.None;
-		UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
+		protected Side controlledSide = Side.None;
+		protected UnityEvent<Side,int> requestStartNewGame = new UnityEvent<Side,int>();
 		private void RequestRestartEndGame() { requestStartNewGame.Invoke(controlledSide, 1); }
-		private void RequestRestartTrainingFailure() 
+		protected virtual void RequestRestartTrainingFailure() 
 		{
 			AddReward(-1000f);
 			requestStartNewGame.Invoke(controlledSide, 2); 
@@ -93,9 +95,8 @@ namespace UnityChess.StrategicAI
 			// nothing to do at shutdown
 		}
 
-		public override void OnActionReceived(ActionBuffers actions)
+		public virtual void DecodeMove(ActionBuffers actions, out Movement decodedMove, out bool actionIsValidMove)
 		{
-			base.OnActionReceived(actions);
 
 			int startCol = actions.DiscreteActions[0];
 			int startRow = actions.DiscreteActions[1];
@@ -108,7 +109,7 @@ namespace UnityChess.StrategicAI
 			Square endSquare = new Square(endCol + 1, endRow + 1);
 			Piece promotionPiece = null;
 
-			
+
 			if (promotionPieceInt != 0)
 			{
 				switch ((PieceEnum)(promotionPieceInt + 1))
@@ -123,45 +124,63 @@ namespace UnityChess.StrategicAI
 						promotionPiece = new Bishop(controlledSide);
 						break;
 					case PieceEnum.WhiteQueen:
-						promotionPiece = new Bishop(controlledSide);
+						promotionPiece = new Queen(controlledSide);
 						break;
 				}
 			}
 
-			Movement chosenMove;
 			if (promotionPiece != null)
 			{
-				chosenMove = new PromotionMove(startSquare, endSquare);
-				(chosenMove as PromotionMove).SetPromotionPiece(promotionPiece);
+				decodedMove = new PromotionMove(startSquare, endSquare);
+				(decodedMove as PromotionMove).SetPromotionPiece(promotionPiece);
 			}
 			else // non-promotion moves are checked by cheking start and end squares only, not their special types so we do not need to decide what move it is at this stage
 			{
-				chosenMove = new Movement(startSquare, endSquare);
+				decodedMove = new Movement(startSquare, endSquare);
 			}
 			// validate the move (for training purposes)
+			actionIsValidMove = true;
+
 			if (!game.TryGetLegalMove(startSquare, endSquare, out Movement move))
 			{// invalid move: try a different one / end the episode and add penalty (if first approach does not work)
 				Debug.Log($"Invalid chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
-				//EndEpisode();
-				RequestRestartTrainingFailure();
-				//RequestDecision();
-				return;
+				actionIsValidMove = false;
 			}
-			
+
 			bool isLegalMoveAPromotionMove = move is PromotionMove;
-			bool isChosenMoveAPromotionMove = chosenMove is PromotionMove;
+			bool isChosenMoveAPromotionMove = decodedMove is PromotionMove;
 			if (isLegalMoveAPromotionMove != isChosenMoveAPromotionMove)
 			{
-				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion" )})");
-				//EndEpisode();
+				Debug.Log($"Invalid chosen promotion move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")} ({(isChosenMoveAPromotionMove ? "attempted illegal promotion" : "has not chosen a piece for promotion")})");
+				actionIsValidMove = false;
+			}
+		}
+
+		public override void OnActionReceived(ActionBuffers actions)
+		{
+			base.OnActionReceived(actions);
+
+			DecodeMove(actions, out Movement chosenMove, out bool actionIsValidMove);
+
+			if (actionIsValidMove)
+			{
+				Debug.Log($"Correct chosen move: {chosenMove.Start.ToString()} -> {chosenMove.End.ToString()} {(chosenMove is PromotionMove promotionMove ? $"promotes to: {promotionMove.PromotionPiece.ToString()}" : "")}");
+				AddReward(1f);
+			}
+			else if(keepTrainingAfterInvalidMove)
+			{
+				//AddReward(-1000f); //??
+				AI_UCIEngineRandom1 aii_UCIEngine1 = new AI_UCIEngineRandom1();
+				Movement randomMove = aii_UCIEngine1.FindBestMove(game);
+				chosenMove = randomMove;
+				Debug.Log($"Heuristic chosen move: {chosenMove.Start.ToString()} -> {chosenMove.End.ToString()} {(chosenMove is PromotionMove promotionMove2 ? $"promotes to: {promotionMove2.PromotionPiece.ToString()}" : "")}");
+			}
+			else // move invalid and we want to end episode on failure
+			{
 				RequestRestartTrainingFailure();
-				//RequestDecision();
 				return;
 			}
 
-
-			Debug.Log($"Correct chosen move: {startSquare.ToString()} -> {endSquare.ToString()} {(promotionPiece != null ? $"promotes to: {promotionPiece.ToString()}" : "")}");
-			AddReward(1f);
 			selectedMovement = chosenMove;
 		}
 
@@ -172,6 +191,11 @@ namespace UnityChess.StrategicAI
 			{
 				throw new System.NullReferenceException("currentBoard is null");
 			}
+			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentGameConditions))
+			{
+				throw new System.NullReferenceException("currentGameConditions is null");
+			}
+
 			// translate board matrix to a sequence of ints
 			//string observationsStr = "\n";
 			for (int row = 1; row <= 8; row++)
@@ -192,11 +216,25 @@ namespace UnityChess.StrategicAI
 				}
 				//observationsStr += "\n";
 			}
+			// add GameConditions to observation space
+			sensor.AddObservation((int)currentGameConditions.SideToMove);
+			sensor.AddObservation(currentGameConditions.WhiteCanCastleKingside);
+			sensor.AddObservation(currentGameConditions.WhiteCanCastleQueenside);
+			sensor.AddObservation(currentGameConditions.BlackCanCastleKingside);
+			sensor.AddObservation(currentGameConditions.BlackCanCastleQueenside);
+			sensor.AddObservation(currentGameConditions.EnPassantSquare.File);
+			sensor.AddObservation(currentGameConditions.EnPassantSquare.Rank);
+
 			//Debug.Log("Observations collected:" + observationsStr);
 		}
 
-		private void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)
+		protected void GetPieceEnum(Piece piece, out PieceEnum finalPieceEnum)
 		{
+			if(piece == null) 
+			{
+				finalPieceEnum = PieceEnum.Empty;
+				return;
+			}
 			// if Piece is black, then its enum value is negative
 			int isBlackMultiplier = piece.Owner == Side.Black ? -1 : 1;
 			PieceEnum pieceEnum = PieceEnum.Empty;
@@ -228,6 +266,35 @@ namespace UnityChess.StrategicAI
 			finalPieceEnum = (PieceEnum)((int)pieceEnum * isBlackMultiplier);
 		}
 
+		protected Piece GetPieceFromEnum(PieceEnum pieceEnum)
+		{
+			if(pieceEnum == PieceEnum.Empty)
+			{
+				return null;
+			}
+			Side pieceSide = (int)pieceEnum < 0 ? Side.Black : Side.White;
+
+			PieceEnum normalizedPieceEnum =(PieceEnum)((int)pieceEnum * (pieceSide == Side.Black ? -1 : 1));
+
+			switch (normalizedPieceEnum)
+			{		
+				case PieceEnum.WhitePawn:
+					return new Pawn(pieceSide);
+				case PieceEnum.WhiteRook:
+					return new Rook(pieceSide);
+				case PieceEnum.WhiteKnight:
+					return new Knight(pieceSide);
+				case PieceEnum.WhiteBishop:
+					return new Bishop(pieceSide);
+				case PieceEnum.WhiteQueen:
+					return new Queen(pieceSide);
+				case PieceEnum.WhiteKing:
+					return new King(pieceSide);
+				default:
+					throw new System.Exception($"provided invalid PieceEnum int value: {(int)pieceEnum}");
+			}
+		}
+
 		// enums for clearer debugging
 		protected enum PieceEnum
 		{
@@ -256,7 +323,7 @@ namespace UnityChess.StrategicAI
 			base.Heuristic(actionsOut);
 			ActionSegment<int> discreteActions = actionsOut.DiscreteActions;
 
-			AI_UCIEngine1 aii_UCIEngine1 = new AI_UCIEngineRandom1();
+			AI_UCIEngineRandom1 aii_UCIEngine1 = new AI_UCIEngineRandom1();
 			Movement move = aii_UCIEngine1.FindBestMove(game);
 			// Offset by -1 because MLAgent gives coordinates from 0 to 7 (not from 1 to 8)
 			discreteActions[0] = move.Start.File - 1;
@@ -268,7 +335,8 @@ namespace UnityChess.StrategicAI
 			{
 				Piece promotionPiece = (move as PromotionMove).PromotionPiece;
 				GetPieceEnum(promotionPiece, out PieceEnum pieceEnum);
-				discreteActions[4] = (int)pieceEnum;
+				int sideMultiplier = controlledSide == Side.Black ? -1 : 1; // regardless of side the Neural Network is supposed to give piece enums as if it was playing White
+				discreteActions[4] = ((int)pieceEnum * sideMultiplier) - 1; // we cannot promote to Pawn, "obtainable" promotion pieces are from 2 to 5 (inclusive)
 			}
 		}
 	}

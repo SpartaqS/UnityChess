@@ -1,0 +1,60 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 582,
+                "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-582.onnx",
+                "reward": -152.55844155844156,
+                "creation_time": 1718206632.419852,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-582.pt"
+                ]
+            },
+            {
+                "steps": 4356,
+                "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-4356.onnx",
+                "reward": -63.486486486486484,
+                "creation_time": 1718212760.5026212,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-4356.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 4356,
+            "file_path": "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent.onnx",
+            "reward": -63.486486486486484,
+            "creation_time": 1718212760.5026212,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsFullBoardAction\\WhiteMLAgent\\WhiteMLAgent-4356.pt"
+            ]
+        }
+    },
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 0,
+                "file_path": "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent\\BlackMLAgent-0.onnx",
+                "reward": null,
+                "creation_time": 1718206642.48534,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent\\BlackMLAgent-0.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 0,
+            "file_path": "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent.onnx",
+            "reward": null,
+            "creation_time": 1718206642.48534,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgentsFullBoardAction\\BlackMLAgent\\BlackMLAgent-0.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

@@ -1,0 +1,69 @@
+{
+    "WhiteMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 261323,
+                "file_path": "results\\NewTwoAgents\\WhiteMLAgent\\WhiteMLAgent-261323.onnx",
+                "reward": 0.0,
+                "creation_time": 1718136593.256756,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgents\\WhiteMLAgent\\WhiteMLAgent-261323.pt"
+                ]
+            },
+            {
+                "steps": 289380,
+                "file_path": "results\\NewTwoAgents\\WhiteMLAgent\\WhiteMLAgent-289380.onnx",
+                "reward": 0.0,
+                "creation_time": 1718185508.603587,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgents\\WhiteMLAgent\\WhiteMLAgent-289380.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 289380,
+            "file_path": "results\\NewTwoAgents\\WhiteMLAgent.onnx",
+            "reward": 0.0,
+            "creation_time": 1718185508.603587,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgents\\WhiteMLAgent\\WhiteMLAgent-289380.pt"
+            ]
+        }
+    },
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 259952,
+                "file_path": "results\\NewTwoAgents\\BlackMLAgent\\BlackMLAgent-259952.onnx",
+                "reward": 0.0,
+                "creation_time": 1718136593.4873302,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgents\\BlackMLAgent\\BlackMLAgent-259952.pt"
+                ]
+            },
+            {
+                "steps": 287867,
+                "file_path": "results\\NewTwoAgents\\BlackMLAgent\\BlackMLAgent-287867.onnx",
+                "reward": 0.0,
+                "creation_time": 1718185508.7891393,
+                "auxillary_file_paths": [
+                    "results\\NewTwoAgents\\BlackMLAgent\\BlackMLAgent-287867.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 287867,
+            "file_path": "results\\NewTwoAgents\\BlackMLAgent.onnx",
+            "reward": 0.0,
+            "creation_time": 1718185508.7891393,
+            "auxillary_file_paths": [
+                "results\\NewTwoAgents\\BlackMLAgent\\BlackMLAgent-287867.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

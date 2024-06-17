@@ -14,7 +14,7 @@ behaviors:
       epsilon_schedule: linear
     network_settings:
       normalize: false
-      hidden_units: 128
+      hidden_units: 142
       num_layers: 2
     reward_signals:
       extrinsic:
@@ -38,7 +38,7 @@ behaviors:
       epsilon_schedule: linear
     network_settings:
       normalize: false
-      hidden_units: 128
+      hidden_units: 142
       num_layers: 2
     reward_signals:
       extrinsic:

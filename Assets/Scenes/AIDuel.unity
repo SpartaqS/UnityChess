@@ -410,10 +410,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af52f25ef0a298044895edd106df75a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duelsToRun: 2
+  duelsToRun: 50
   executedDuelsCount: 0
-  whiteAiType: 2
-  blackAiType: 1
+  whiteAiType: 1
+  blackAiType: 3
   winsWhite: 0
   winsBlack: 0
   draws: 0

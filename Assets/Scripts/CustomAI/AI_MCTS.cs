@@ -149,12 +149,6 @@ namespace UnityChess.StrategicAI
 
 			Node root = new Node(null, initialConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
 
-			//TEMP (should use a random one within some tolerance to control difficulty)
-			int bestResult = -2 * playoutsPerLeaf;
-#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-			int bestResultPlayouts = -1;
-			int bestResultWins = -2 * playoutsPerLeaf;
-#endif
 			Movement bestMove = null;
 
 			int totalResult = 0;
@@ -319,12 +313,16 @@ namespace UnityChess.StrategicAI
 				currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 				if (latestHalfMove.CausedCheckmate) // the player who just moved checkmated the "current" player
 				{
+#if DEBUG_MCTS
 					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} checkmated with {stepsLeft} steps left");
+#endif
 					return -1;
 				}
 				else //(latestHalfMove.CausedStalemate)
 				{
+#if DEBUG_MCTS
 					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} stalemated with {stepsLeft} steps left");
+#endif
 					return 0;
 				}
 			}
@@ -363,7 +361,7 @@ namespace UnityChess.StrategicAI
 #endif
 		}
 
-		#region Tree
+#region Tree
 		public class Node
 		{
 			public int Visits { get; set; }
@@ -464,52 +462,6 @@ namespace UnityChess.StrategicAI
 			{
 				Visits++;
 				Score += score;
-			}
-		}
-
-#endregion
-
-#region Tools
-		private List<int> GenerateRandomIntegers(int a, int b, int n)
-		{
-			List<int> result = new List<int>();
-
-			if (n > b - a + 1)
-			{
-				for (int i = a; i <= b; i++)
-				{
-					result.Add(i);
-				}
-				Shuffle(result);
-			}
-			else
-			{
-				HashSet<int> set = new HashSet<int>();
-				while (result.Count < n)
-				{
-					int num = Random.Range(a, b + 1);
-					if (!set.Contains(num))
-					{
-						set.Add(num);
-						result.Add(num);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		// Fisher-Yates shuffle algorithm to shuffle the list
-		void Shuffle<T>(List<T> list)
-		{
-			int n = list.Count;
-			while (n > 1)
-			{
-				n--;
-				int k = Random.Range(0, n + 1);
-				T value = list[k];
-				list[k] = list[n];
-				list[n] = value;
 			}
 		}
 

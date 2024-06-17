@@ -90,7 +90,7 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
 	public void ResetGameToLastHalfMove() => GameManager.Instance.ResetGameToHalfMoveIndex(GameManager.Instance.HalfMoveTimeline.Count - 1);
 
-	public void StartNewGame() => GameManager.Instance.StartNewGame();
+	public void StartNewGame() => GameManager.Instance.StartNewGameWithCurrentSettings();
 	
 	public void LoadGame() => GameManager.Instance.LoadGame(GameStringInputField.text);
 

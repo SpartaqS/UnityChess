@@ -80,9 +80,12 @@ namespace UnityChess.StrategicAI
 			if (!game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
 				return null;
 
+			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
+				return null;
+
 			controlledSide = currentConditions.SideToMove;
 			selectedMovement = null;
-			currentGame = new Game(game);
+			currentGame = new Game(currentConditions, currentBoard);
 			transpositionTable.Clear();
 
 			//TODO implement timeout
@@ -232,7 +235,7 @@ namespace UnityChess.StrategicAI
 			}
 
 			// unpack moves into a list to iterate over them in the search
-			List<Movement> movements = UnpackMovementsToList(possibleMovesPerPiece);
+			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
 #if USE_MOVE_ORDERING
 			// order moves: explore the most promising ones first.
 			movements = moveOrdering.OrderMoves(currentBoard, movements);
@@ -412,33 +415,6 @@ namespace UnityChess.StrategicAI
 				}
 
 			return sideEvaluation;
-		}
-
-		protected List<Movement> UnpackMovementsToList(Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece)
-		{
-			List<Movement> movements = new List<Movement>();
-
-			foreach (Piece piece in possibleMovesPerPiece.Keys)
-			{
-				foreach (Movement move in possibleMovesPerPiece[piece].Values)
-				{
-					if (piece is Pawn)
-					{
-						if (move is PromotionMove)          // TODO: generate moves with promotions for each piece type that can be obtained via a promotion
-						{// pawn promotes: pick a promotion for it
-							Side currentSide = piece.Owner;
-							(move as PromotionMove).SetPromotionPiece(new Queen(currentSide));
-							movements.Add(move);
-							continue;
-						}
-
-					}
-					movements.Add(move);
-				}
-			}
-
-			// TODO: order the movements list to speed up search
-			return movements;
 		}
 	}
 }

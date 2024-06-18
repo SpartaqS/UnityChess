@@ -94,7 +94,7 @@ namespace UnityChess.StrategicAI
 
 			controlledSide = currentConditions.SideToMove;
 			selectedMovement = null;
-			currentGame = new Game(currentConditions, currentBoard);
+			currentGame = new Game(game);
 			transpositionTable.Clear();
 
 			//TODO implement timeout
@@ -153,11 +153,38 @@ namespace UnityChess.StrategicAI
 			} 
 			else // this is not the first move of the AI_MCTS: find root in previous' player's moves
 			{
-				Game currentGameCopy = new Game(game);
-				foreach (Node node in root.Children)
+				if (!currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove lastHalfMove))
 				{
-
+					throw new System.Exception("game: could not retrieve lastHalfMove");
 				}
+				Movement lastMove = lastHalfMove.Move;
+				Node currentTimelineNode = null;
+				foreach (Node childNode in root.Children)
+				{
+					Movement childMove = childNode.ExecutedMove;
+					if (childMove.Equals(lastMove))
+					{
+						if (childMove is PromotionMove childMoveAsPromotionMove) 
+						{
+							if (Piece.ArePiecesEqual(childMoveAsPromotionMove.PromotionPiece, ((PromotionMove)lastMove).PromotionPiece))
+							{
+								currentTimelineNode = childNode;
+								break;
+							}
+						}
+						else
+						{
+							currentTimelineNode = childNode;
+							break;
+						}
+					}
+				}
+
+				if(currentTimelineNode == null)
+				{
+					throw new System.Exception("AI_MCTS: failed to locate previous player's move in the search tree");
+				}
+				ChangeRootTo(currentTimelineNode);
 			}
 
 
@@ -169,10 +196,11 @@ namespace UnityChess.StrategicAI
 			debug_wins = 0;
 			debug_losses = 0;
 #endif
+			int initialHalfIndex = game.HalfMoveTimeline.HeadIndex;
 
 			for (int i = 0; i < leafsToExplore; i++) 
 			{
-				currentGame = new Game(initialConditions, initialBoard); // reset the working copy of Game
+				currentGame.ResetGameToHalfMoveIndex(initialHalfIndex); // reset the working copy of Game
 				Node currentNode = root;// new Node(root, currentConditions.SideToMove, currentMove);
 
 				//TODO START
@@ -263,7 +291,7 @@ namespace UnityChess.StrategicAI
 
 
 #if DEBUG || DEBUG_MCTS_SIMPLE
-			Debug.Log($"best result: {bestNode.Score} ({bestNode.Visits} playouts) [{debug_wins} total wins]");
+			Debug.Log($"best result: {bestNode.Score} / {root.Score} ({bestNode.Visits} / {root.Visits} playouts) [{debug_wins} total wins]");
 #endif
 
 			ChangeRootTo(bestNode); // we will execute this legal move, so the timeline should be advanced to this place

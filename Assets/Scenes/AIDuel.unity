@@ -412,8 +412,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   duelsToRun: 50
   executedDuelsCount: 0
-  whiteAiType: 1
-  blackAiType: 3
+  whiteAiType: 3
+  blackAiType: 1
   winsWhite: 0
   winsBlack: 0
   draws: 0

@@ -147,7 +147,19 @@ namespace UnityChess.StrategicAI
 			// optional: set random seed to have reproducible decisions
 			//Random.InitState(0);
 
-			Node root = new Node(null, initialConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
+			if (root == null)
+			{
+				root = new Node(null, initialConditions.SideToMove.Complement(), null); // previous player's move has caused us to end up in this position that we are evalauting
+			} 
+			else // this is not the first move of the AI_MCTS: find root in previous' player's moves
+			{
+				Game currentGameCopy = new Game(game);
+				foreach (Node node in root.Children)
+				{
+
+				}
+			}
+
 
 			Movement bestMove = null;
 
@@ -254,7 +266,8 @@ namespace UnityChess.StrategicAI
 			Debug.Log($"best result: {bestNode.Score} ({bestNode.Visits} playouts) [{debug_wins} total wins]");
 #endif
 
-			
+			ChangeRootTo(bestNode); // we will execute this legal move, so the timeline should be advanced to this place
+
 			return bestMove;
 		}
 
@@ -362,6 +375,12 @@ namespace UnityChess.StrategicAI
 		}
 
 #region Tree
+		private void ChangeRootTo(Node newRoot)
+		{
+			root = newRoot;
+			newRoot.Parent = null; // lose connection to alternate timelines (garbage collector should handle them)
+		}
+
 		public class Node
 		{
 			public int Visits { get; set; }

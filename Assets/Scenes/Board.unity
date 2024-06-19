@@ -3000,7 +3000,7 @@ PrefabInstance:
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: blackAiTypeToCreate
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
@@ -3016,12 +3016,12 @@ PrefabInstance:
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: useCustomStartBoard
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: whiteAiTypeToCreate
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}

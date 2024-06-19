@@ -53,8 +53,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		_ => -1
 	};
 
-	private bool isWhiteAI;
-	private bool isBlackAI;
+	[SerializeField] private bool isWhiteAI;
+	[SerializeField] private bool isBlackAI;
 
 	public List<(Square, Piece)> CurrentPieces {
 		get {

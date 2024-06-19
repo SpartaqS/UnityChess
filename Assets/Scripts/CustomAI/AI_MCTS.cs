@@ -205,8 +205,6 @@ namespace UnityChess.StrategicAI
 
 				//TODO START
 
-				int leafExpandMultiplier = 1;
-
 				// Select
 				while (!currentNode.IsLeaf())
 				{
@@ -241,7 +239,6 @@ namespace UnityChess.StrategicAI
 						currentNode = examinedNode;
 						currentGame.TryExecuteMove(currentNode.ExecutedMove);
 
-						leafExpandMultiplier = -1;
 					} // else: reached terminal node: only "simulate" (get instant result) and backpropagate					
 				}
 
@@ -249,11 +246,15 @@ namespace UnityChess.StrategicAI
 
 				for (int j = 0; j < playoutsPerLeaf; j++)
 				{
-					// Simulate
-					int result = leafExpandMultiplier * Simulate(currentNode);
+					int simulationStartHalfIndex = currentGame.HalfMoveTimeline.HeadIndex;
+					int result = Simulate();
 
 					// Backpropagate
 					Backpropagate(currentNode, result);
+					if (playoutsPerLeaf > 1)
+					{// if we only do one playout per leaf, currentGame will be reset anyways
+						currentGame.ResetGameToHalfMoveIndex(simulationStartHalfIndex);
+					}
 
 					totalResult += result;
 					totalPlayouts++;
@@ -291,7 +292,7 @@ namespace UnityChess.StrategicAI
 
 
 #if DEBUG || DEBUG_MCTS_SIMPLE
-			Debug.Log($"best result: {bestNode.Score} / {root.Score} ({bestNode.Visits} / {root.Visits} playouts) [{debug_wins} total wins]");
+			Debug.Log($"best result: {bestNode.Score} / {-root.Score} ({bestNode.Visits} / {root.Visits} playouts) [{debug_wins} total wins]");
 #endif
 
 			ChangeRootTo(bestNode); // we will execute this legal move, so the timeline should be advanced to this place
@@ -306,28 +307,14 @@ namespace UnityChess.StrategicAI
 		/// <summary>
 		/// Runs a single game to the end, starting from the current game state in node
 		/// </summary>
-		/// <param name="node"></param>
-		/// <returns>-1 : loss of starting player; 0 : tie; 1: win of the starting player</returns>
-		private int Simulate(Node node)
+		/// <returns>-1 : loss of player who moved before starting the simulation; 0 : tie; 1: win of the player whi moved jjust before starting the simulation</returns>
+		private int Simulate()
 		{
-
-			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
-			{
-				throw new System.Exception("currentGame: could not retrieve currentConditions");
-			}
-
-			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
-			{
-				throw new System.Exception("currentGame: could not retrieve currentBoard");
-			}
-
-			int simulationMultiplier = (currentConditions.SideToMove == controlledSide ? 1 : -1); // adjust result for the simulation
-			int result = SimulateStep(node.ExecutedMove, maxStepsPerPlayout); // if the making ExecutedMove is a checkmate, the result is 1 so we need to interpret it as a win
-			return simulationMultiplier * result;
+			return -SimulateStep(maxStepsPerPlayout); // if the making node.ExecutedMove is a checkmate, the result is -1 so we need to interpret it as a win
 		}
 
 		// execute performedMove on simulationGame and see what happens
-		private int SimulateStep(Movement performedMove, int stepsLeft)
+		private int SimulateStep(int stepsLeft)
 		{
 			if (stepsLeft < 1)
 			{
@@ -371,7 +358,7 @@ namespace UnityChess.StrategicAI
 			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
 			Movement chosenMove = PickRandomMove(movements);
 			currentGame.TryExecuteMove(chosenMove);
-			return -SimulateStep(chosenMove, stepsLeft - 1); // * -1 because the result is returned from the perspective of the player whose move it is after executing chosenMove;
+			return -SimulateStep(stepsLeft - 1); // * -1 because the result is returned from the perspective of the player whose move it is after executing chosenMove;
 		}
 
 		private Movement PickRandomMove(List<Movement> movements)
@@ -391,11 +378,11 @@ namespace UnityChess.StrategicAI
 			}
 
 #if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-			if (score < 0)
+			if (score > 0)
 			{
 				debug_wins++;
 			}
-			else if (score > 0)
+			else if (score < 0)
 			{
 				debug_losses++;
 			}

@@ -19,6 +19,7 @@ namespace UnityChess
 
 		string saveFileName;
 
+		[SerializeField] bool StartDuelAtStart = true;
 
 		private void Awake()
 		{
@@ -35,7 +36,8 @@ namespace UnityChess
 
 			gameManager.WhiteAiTypeToCreate = whiteAiType;
 			gameManager.BlackAiTypeToCreate = blackAiType;
-			StartNewDuelIfAppropriate();
+			if(StartDuelAtStart)
+				StartNewDuelIfAppropriate();
 		}
 
 

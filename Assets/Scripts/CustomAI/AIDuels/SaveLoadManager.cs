@@ -9,11 +9,18 @@ namespace UnityChess.SaveSystem
         private string DefaultSavePath => $"{Application.persistentDataPath}/saves/quicksave.txt";
         private string SavePathCustom => $"{Application.persistentDataPath}/saves/";
 
+        private string LastUsedfinalPath = null;
+
         [ContextMenu("Save")] //so we can use this in the inspector (normally should be disabled?)
         private void Save()
         {
-            Debug.Log("Saving duel stats at: " + Application.persistentDataPath);
-            var state = LoadFile(DefaultSavePath);
+            string savePath = DefaultSavePath;
+            if(LastUsedfinalPath != null)
+			{
+                savePath = LastUsedfinalPath;
+			}
+            Debug.Log("Saving duel stats at: " + savePath);
+            var state = LoadFile(savePath);
             CaptureState(state);
             SaveFile(state, DefaultSavePath);
         }
@@ -21,6 +28,7 @@ namespace UnityChess.SaveSystem
         public void Save(string fileName)
         {
             string finalPath = SavePathCustom + fileName;
+            LastUsedfinalPath = finalPath;
             Debug.Log("Saving duel stats at: " + finalPath);
             var state = LoadFile(finalPath);
             CaptureState(state);
@@ -30,12 +38,18 @@ namespace UnityChess.SaveSystem
         [ContextMenu("Load")] //so we can use this in the inspector (normally should be disabled?)
         public void Load()
         {
-            Load(DefaultSavePath);
+            string savePath = DefaultSavePath;
+            if (LastUsedfinalPath != null)
+            {
+                savePath = LastUsedfinalPath;
+            }
+            Load(savePath);
         }
 
         public void Load(string fileName)
         {
             string finalPath = SavePathCustom + fileName;
+            LastUsedfinalPath = finalPath;
             Debug.Log("Loading : " + finalPath);
             var state = LoadFile(finalPath);
             RestoreState(state);
@@ -52,6 +66,7 @@ namespace UnityChess.SaveSystem
 
         private Dictionary<string, object> LoadFile(string savePath)
         {
+            Debug.Log("Loading from file: " + savePath);
             if(!File.Exists(savePath)) // if no save file found, return empty
             {
                 return new Dictionary<string, object>();

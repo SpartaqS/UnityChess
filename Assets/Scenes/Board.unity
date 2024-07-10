@@ -3000,13 +3000,13 @@ PrefabInstance:
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: blackAiTypeToCreate
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: mctsDefaultSettings
       value: 
-      objectReference: {fileID: 11400000, guid: 92fc839573e019e4e8e139dc1944458d,
+      objectReference: {fileID: 11400000, guid: 5e296d38a4d8f5c46b21ee341129aa27,
         type: 2}
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
@@ -3021,7 +3021,7 @@ PrefabInstance:
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: whiteAiTypeToCreate
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}

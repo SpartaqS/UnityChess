@@ -115,6 +115,8 @@ namespace UnityChess.StrategicAI.Test
 			AIMinMaxSettings bothAIsSettings = ScriptableObject.CreateInstance<AIMinMaxSettings>();
 			bothAIsSettings.SearchDepth = searchDepth;
 
+			GameManager.Instance.WhiteAiTypeToCreate = GameManager.AIType.MinMax;
+			GameManager.Instance.BlackAiTypeToCreate = GameManager.AIType.MinMax;
 			GameManager.Instance.CustomStartingPositionPieces = twoRooksMatingTestBoard;
 			GameManager.Instance.WhiteUciEngineCustomSettings = bothAIsSettings;
 			GameManager.Instance.BlackUciEngineCustomSettings = bothAIsSettings;

@@ -94,7 +94,7 @@ namespace UnityChess.StrategicAI
 
 			controlledSide = currentConditions.SideToMove;
 			selectedMovement = null;
-			currentGame = new Game(currentConditions, currentBoard);
+			currentGame = new Game(game);
 			transpositionTable.Clear();
 
 			//TODO implement timeout
@@ -144,8 +144,8 @@ namespace UnityChess.StrategicAI
 				throw new System.Exception("currentGame: could not retrieve currentBoard");
 			}
 
-			//TODO: do the actual algorithm here
-			Random.InitState(0);
+			// optional: set random seed to have reproducible decisions
+			//Random.InitState(0);
 
 			if (root == null)
 			{
@@ -153,20 +153,41 @@ namespace UnityChess.StrategicAI
 			} 
 			else // this is not the first move of the AI_MCTS: find root in previous' player's moves
 			{
-				Game currentGameCopy = new Game(game);
-				foreach (Node node in root.Children)
+				if (!currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove lastHalfMove))
 				{
-
+					throw new System.Exception("game: could not retrieve lastHalfMove");
 				}
+				Movement lastMove = lastHalfMove.Move;
+				Node currentTimelineNode = null;
+				foreach (Node childNode in root.Children)
+				{
+					Movement childMove = childNode.ExecutedMove;
+					if (childMove.Equals(lastMove))
+					{
+						if (childMove is PromotionMove childMoveAsPromotionMove) 
+						{
+							if (Piece.ArePiecesEqual(childMoveAsPromotionMove.PromotionPiece, ((PromotionMove)lastMove).PromotionPiece))
+							{
+								currentTimelineNode = childNode;
+								break;
+							}
+						}
+						else
+						{
+							currentTimelineNode = childNode;
+							break;
+						}
+					}
+				}
+
+				if(currentTimelineNode == null)
+				{
+					throw new System.Exception("AI_MCTS: failed to locate previous player's move in the search tree");
+				}
+				ChangeRootTo(currentTimelineNode);
 			}
 
 
-			//TEMP (should use a random one within some tolerance to control difficulty)
-			int bestResult = -2 * playoutsPerLeaf;
-#if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-			int bestResultPlayouts = -1;
-			int bestResultWins = -2 * playoutsPerLeaf;
-#endif
 			Movement bestMove = null;
 
 			int totalResult = 0;
@@ -175,15 +196,14 @@ namespace UnityChess.StrategicAI
 			debug_wins = 0;
 			debug_losses = 0;
 #endif
+			int initialHalfIndex = game.HalfMoveTimeline.HeadIndex;
 
 			for (int i = 0; i < leafsToExplore; i++) 
 			{
-				currentGame = new Game(initialConditions, initialBoard); // reset the working copy of Game
+				currentGame.ResetGameToHalfMoveIndex(initialHalfIndex); // reset the working copy of Game
 				Node currentNode = root;// new Node(root, currentConditions.SideToMove, currentMove);
 
 				//TODO START
-
-				int leafExpandMultiplier = 1;
 
 				// Select
 				while (!currentNode.IsLeaf())
@@ -219,7 +239,6 @@ namespace UnityChess.StrategicAI
 						currentNode = examinedNode;
 						currentGame.TryExecuteMove(currentNode.ExecutedMove);
 
-						leafExpandMultiplier = -1;
 					} // else: reached terminal node: only "simulate" (get instant result) and backpropagate					
 				}
 
@@ -227,11 +246,15 @@ namespace UnityChess.StrategicAI
 
 				for (int j = 0; j < playoutsPerLeaf; j++)
 				{
-					// Simulate
-					int result = leafExpandMultiplier * Simulate(currentNode);
+					int simulationStartHalfIndex = currentGame.HalfMoveTimeline.HeadIndex;
+					int result = Simulate();
 
 					// Backpropagate
 					Backpropagate(currentNode, result);
+					if (playoutsPerLeaf > 1)
+					{// if we only do one playout per leaf, currentGame will be reset anyways
+						currentGame.ResetGameToHalfMoveIndex(simulationStartHalfIndex);
+					}
 
 					totalResult += result;
 					totalPlayouts++;
@@ -269,7 +292,7 @@ namespace UnityChess.StrategicAI
 
 
 #if DEBUG || DEBUG_MCTS_SIMPLE
-			Debug.Log($"best result: {bestNode.Score} ({bestNode.Visits} playouts) [{debug_wins} total wins]");
+			Debug.Log($"best result: {bestNode.Score} / {-root.Score} ({bestNode.Visits} / {root.Visits} playouts) [{debug_wins} total wins]");
 #endif
 
 			ChangeRootTo(bestNode); // we will execute this legal move, so the timeline should be advanced to this place
@@ -284,28 +307,14 @@ namespace UnityChess.StrategicAI
 		/// <summary>
 		/// Runs a single game to the end, starting from the current game state in node
 		/// </summary>
-		/// <param name="node"></param>
-		/// <returns>-1 : loss of starting player; 0 : tie; 1: win of the starting player</returns>
-		private int Simulate(Node node)
+		/// <returns>-1 : loss of player who moved before starting the simulation; 0 : tie; 1: win of the player whi moved jjust before starting the simulation</returns>
+		private int Simulate()
 		{
-
-			if (!currentGame.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions))
-			{
-				throw new System.Exception("currentGame: could not retrieve currentConditions");
-			}
-
-			if (!currentGame.BoardTimeline.TryGetCurrent(out Board currentBoard))
-			{
-				throw new System.Exception("currentGame: could not retrieve currentBoard");
-			}
-
-			int simulationMultiplier = (currentConditions.SideToMove == controlledSide ? 1 : -1); // adjust result for the simulation
-			int result = SimulateStep(node.ExecutedMove, maxStepsPerPlayout); // if the making ExecutedMove is a checkmate, the result is 1 so we need to interpret it as a win
-			return simulationMultiplier * result;
+			return -SimulateStep(maxStepsPerPlayout); // if the making node.ExecutedMove is a checkmate, the result is -1 so we need to interpret it as a win
 		}
 
 		// execute performedMove on simulationGame and see what happens
-		private int SimulateStep(Movement performedMove, int stepsLeft)
+		private int SimulateStep(int stepsLeft)
 		{
 			if (stepsLeft < 1)
 			{
@@ -332,12 +341,16 @@ namespace UnityChess.StrategicAI
 				currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 				if (latestHalfMove.CausedCheckmate) // the player who just moved checkmated the "current" player
 				{
+#if DEBUG_MCTS
 					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} checkmated with {stepsLeft} steps left");
+#endif
 					return -1;
 				}
 				else //(latestHalfMove.CausedStalemate)
 				{
+#if DEBUG_MCTS
 					Debug.Log($"AI_MCTS: {currentConditions.SideToMove} stalemated with {stepsLeft} steps left");
+#endif
 					return 0;
 				}
 			}
@@ -345,7 +358,7 @@ namespace UnityChess.StrategicAI
 			List<Movement> movements = Game.UnpackMovementsToList(possibleMovesPerPiece);
 			Movement chosenMove = PickRandomMove(movements);
 			currentGame.TryExecuteMove(chosenMove);
-			return -SimulateStep(chosenMove, stepsLeft - 1); // * -1 because the result is returned from the perspective of the player whose move it is after executing chosenMove;
+			return -SimulateStep(stepsLeft - 1); // * -1 because the result is returned from the perspective of the player whose move it is after executing chosenMove;
 		}
 
 		private Movement PickRandomMove(List<Movement> movements)
@@ -365,18 +378,18 @@ namespace UnityChess.StrategicAI
 			}
 
 #if DEBUG_MCTS || DEBUG_MCTS_SIMPLE
-			if (score < 0)
+			if (score > 0)
 			{
 				debug_wins++;
 			}
-			else if (score > 0)
+			else if (score < 0)
 			{
 				debug_losses++;
 			}
 #endif
 		}
 
-		#region Tree
+#region Tree
 		private void ChangeRootTo(Node newRoot)
 		{
 			root = newRoot;
@@ -483,52 +496,6 @@ namespace UnityChess.StrategicAI
 			{
 				Visits++;
 				Score += score;
-			}
-		}
-
-#endregion
-
-#region Tools
-		private List<int> GenerateRandomIntegers(int a, int b, int n)
-		{
-			List<int> result = new List<int>();
-
-			if (n > b - a + 1)
-			{
-				for (int i = a; i <= b; i++)
-				{
-					result.Add(i);
-				}
-				Shuffle(result);
-			}
-			else
-			{
-				HashSet<int> set = new HashSet<int>();
-				while (result.Count < n)
-				{
-					int num = Random.Range(a, b + 1);
-					if (!set.Contains(num))
-					{
-						set.Add(num);
-						result.Add(num);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		// Fisher-Yates shuffle algorithm to shuffle the list
-		void Shuffle<T>(List<T> list)
-		{
-			int n = list.Count;
-			while (n > 1)
-			{
-				n--;
-				int k = Random.Range(0, n + 1);
-				T value = list[k];
-				list[k] = list[n];
-				list[n] = value;
 			}
 		}
 

@@ -50,7 +50,9 @@ namespace UnityChess.StrategicAI
 
 
 			Movement bestMove = null;
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+
+			game.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece);
+
 			bool isCapturePossible = false;
 			List<MovementWithSide> capturingMoves, noncapturingMoves;
 			isCapturePossible = GetCaptureAndNonCaptureMoves(currentBoard, currentSide, possibleMovesPerPiece, isCapturePossible, out capturingMoves, out noncapturingMoves);
@@ -87,7 +89,35 @@ namespace UnityChess.StrategicAI
 						}
 						if (move is PromotionMove)
 						{// pawn promotes: pick a promotion for it
-							(move as PromotionMove).SetPromotionPiece(new Queen(currentSide));
+							List<Movement> possiblePromotionMoves = new List<Movement>();
+							PromotionMove promoMoveQueen = new PromotionMove(move.Start, move.End);
+							PromotionMove promoMoveBishop = new PromotionMove(move.Start, move.End);
+							PromotionMove promoMoveKnight = new PromotionMove(move.Start, move.End);
+							PromotionMove promoMoveRook = new PromotionMove(move.Start, move.End);
+
+							promoMoveQueen.SetPromotionPiece(new Queen(currentSide));
+							promoMoveBishop.SetPromotionPiece(new Bishop(currentSide));
+							promoMoveKnight.SetPromotionPiece(new Knight(currentSide));
+							promoMoveRook.SetPromotionPiece(new Rook(currentSide));
+							possiblePromotionMoves.Add(promoMoveQueen);
+							possiblePromotionMoves.Add(promoMoveBishop);
+							possiblePromotionMoves.Add(promoMoveKnight);
+							possiblePromotionMoves.Add(promoMoveRook);
+
+							List<MovementWithSide> listToAddTo = noncapturingMoves;
+
+							if (IsCapturingMove(currentBoard, move.End))
+							{
+								listToAddTo = capturingMoves;
+								isCapturePossible = true;
+							}
+
+							foreach (PromotionMove promoMove in possiblePromotionMoves) 
+							{
+								listToAddTo.Add(new MovementWithSide(currentSide, promoMove));
+							}
+
+							continue;
 						}
 
 					}

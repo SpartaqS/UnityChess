@@ -21,7 +21,6 @@ namespace UnityChess.StrategicAI
 		protected int selectedMovementEval = 0;
 		protected Movement bestMoveThisIteration = null;
 		protected int evalBestMoveThisIteration = 0;
-		Side controlledSide = Side.None;
 		bool abortSearch = false;
 
 		// working "game" copy - used to simulate moves
@@ -83,12 +82,10 @@ namespace UnityChess.StrategicAI
 			if (!game.BoardTimeline.TryGetCurrent(out Board currentBoard))
 				return null;
 
-			controlledSide = currentConditions.SideToMove;
 			selectedMovement = null;
 			currentGame = new Game(currentConditions, currentBoard);
 			transpositionTable.Clear();
 
-			//TODO implement timeout
 			// run min max search function
 			//Task.Factory.StartNew ()
 			InitDebugInfo();
@@ -112,11 +109,8 @@ namespace UnityChess.StrategicAI
 #if DEBUG
 		List<Movement> DEBUG_Movements = new List<Movement>();
 #endif
-		//public SearchDiagnostics searchDiagnostics;
 		int movesEvaluated;
-		//int numQNodes;
 		int movesCutoff;
-		//int numTranspositions;
 		System.Diagnostics.Stopwatch searchStopwatch;
 		int ttHits;
 #if DEBUG
@@ -127,9 +121,7 @@ namespace UnityChess.StrategicAI
 		{
 			searchStopwatch = System.Diagnostics.Stopwatch.StartNew();
 			movesEvaluated = 0;
-			//numQNodes = 0;
 			movesCutoff = 0;
-			//numTranspositions = 0;
 			ttHits = 0;
 		}
 
@@ -153,19 +145,12 @@ namespace UnityChess.StrategicAI
 
 			if (currentSearchDepth > 0)
 			{
-				//	// Detect draw by repetition.
-				//	// Returns a draw score even if this position has only appeared once in the game history (for simplicity).
-				//	if (board.RepetitionPositionHistory.Contains(board.ZobristKey))
-				//	{
-				//		return 0;
-				//	}
-
 				// Skip this position if a mating sequence has already been found earlier in
 				// the search, which would be shorter than any mate we could find from here.
 				// This is done by observing that alpha can't possibly be worse (and likewise
 				// beta can't  possibly be better) than being mated in the current position.
-				//alpha = Max(alpha, -immediateMateScore + currentSearchDepth);
-				//beta = Min(beta, immediateMateScore - currentSearchDepth);
+				alpha = Mathf.Max(alpha, -immediateMateScore + currentSearchDepth);
+				beta = Mathf.Min(beta, immediateMateScore - currentSearchDepth);
 				if (alpha >= beta)
 				{
 					return alpha;
@@ -210,22 +195,23 @@ namespace UnityChess.StrategicAI
 			if (depth == 0)				
 			{
 				int evaluation = EvaluateBoard(currentBoard, currentConditions.SideToMove);
-				// optional if we want to have no search depth (delete?)
-				//int evaluation = QuiescenceSearch(alpha, beta);
 				return evaluation;
 			}
 
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+			if (!currentGame.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece))
+			{
+				throw new System.Exception("currentGame: could not retrieve possibleMovesPerPiece");
+			}
 			// Detect checkmate and stalemate when no legal moves are available
 			if (possibleMovesPerPiece == null)
 			{
-				currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove); //TODO //?? maybye put these in the transposition table so instant checkmates are detected before searching the tt?
+				currentGame.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 				if (latestHalfMove.CausedCheckmate)
 				{
 					int mateScore = immediateMateScore - currentSearchDepth;
 					return -mateScore;
 				}
-				else //(latestHalfMove.CausedStalemate)
+				else //(latestHalfMove.CausedStalemate || latestHalfMove.CausedThreeFoldRepetition || latestHalfMove.Caused50MovesDraw)
 				{
 					return 0;
 				}
@@ -332,7 +318,6 @@ namespace UnityChess.StrategicAI
 		{
 			string debugBoardFEN = FENSerializer.GetBoardString(board); //debug
 
-			//TODO:
 			SideEvaluation whiteEvaluation = new SideEvaluation(Side.White);
 			SideEvaluation blackEvaluation = new SideEvaluation(Side.Black);
 
@@ -341,8 +326,6 @@ namespace UnityChess.StrategicAI
 			blackEvaluation.materialScore = GetMaterialScore(board, Side.Black);
 
 			//2. give bonuses based on piece positions
-			//2a. TODO generate lists of pieces for faster iteration
-
 			whiteEvaluation = GetPositionScore(board, whiteEvaluation);
 			blackEvaluation = GetPositionScore(board, blackEvaluation);
 
@@ -390,7 +373,7 @@ namespace UnityChess.StrategicAI
 					return RookValue;
 				case Queen:
 					return QueenValue;
-				default: // assuming that Kings have no "material value"
+				default: // assuming that Kings have no "material score"
 					return 0;
 			}
 		}

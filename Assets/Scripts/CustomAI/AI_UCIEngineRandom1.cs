@@ -9,7 +9,7 @@ using UnityEngine.Events;
 namespace UnityChess.StrategicAI
 {
 	/// <summary>
-	/// like AI_UCIEngine1 but chooses a random movement instead of the leftmost, firthermost capture, with capturing having higher weight
+	/// like AI_UCIEngine1 but chooses a random movement instead of the leftmost, furthermost capture. Whether the chosen move is a capture or not is determined by captureMoveChance
 	/// </summary>
 	public class AI_UCIEngineRandom1 : AI_UCIEngine1
 	{
@@ -26,27 +26,22 @@ namespace UnityChess.StrategicAI
 
 
 			Movement bestMove = null;
-			Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece = Game.CalculateLegalMovesForPosition(currentBoard, currentConditions);
+			game.LegalMovesTimeline.TryGetCurrent(out Dictionary<Piece, Dictionary<(Square, Square), Movement>> possibleMovesPerPiece);
 			bool isCapturePossible = false;
 			List<MovementWithSide> capturingMoves, noncapturingMoves;
 			isCapturePossible = GetCaptureAndNonCaptureMoves(currentBoard, currentSide, possibleMovesPerPiece, isCapturePossible, out capturingMoves, out noncapturingMoves);
 
-			//List<MovementWithSide> allMovements = new List<MovementWithSide>();
-
 			if (isCapturePossible)
 			{
-				if (Random.Range(0f, 1f) <= captureMoveChance)
+				if (Random.Range(0f, 1f) <= captureMoveChance || noncapturingMoves.Count < 1)
 				{
-					capturingMoves.Sort(new MovementWithSideComparer());
-					//allMovements.AddRange(capturingMoves);
 					bestMove = PickRandomMovement(capturingMoves);
 					return bestMove;
 				}
 
 			}
-			noncapturingMoves.Sort(new MovementWithSideComparer());
-			//allMovements.AddRange(noncapturingMoves);
 			bestMove = PickRandomMovement(noncapturingMoves);
+
 			return bestMove;
 		}
 

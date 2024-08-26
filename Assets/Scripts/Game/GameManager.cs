@@ -1,13 +1,15 @@
-﻿// MLAgents definitions
+// MLAgents definitions
 //#define TRAIN_WHITE_AI
 //#define TRAIN_BLACK_AI
-#define BLACK_HUMAN_VS_AI
+//#define BLACK_HUMAN_VS_AI
 //#define WHITE_HUMAN_VS_AI
 //#define AI_TEST
 //#define DEBUG_VIEW
 #if TRAIN_WHITE_AI
 #define AI_TEST
 #elif TRAIN_BLACK_AI
+#define AI_TEST
+#elif TRAIN_BOTH_AI
 #define AI_TEST
 #endif
 using System;
@@ -51,8 +53,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		_ => -1
 	};
 
-	private bool isWhiteAI;
-	private bool isBlackAI;
+	[SerializeField] private bool isWhiteAI;
+	[SerializeField] private bool isBlackAI;
 
 	public List<(Square, Piece)> CurrentPieces {
 		get {
@@ -69,7 +71,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	}
 
 	private readonly List<(Square, Piece)> currentPiecesBacking = new List<(Square, Piece)>();
-	
+
 	[SerializeField] private UnityChessDebug unityChessDebug;
 	private Game game;
 	private FENSerializer fenSerializer;
@@ -82,11 +84,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	private IUCIEngine whiteUciEngine;
 	private IUCIEngine blackUciEngine;
 
+	[SerializeField] private AIType whiteAiTypeToCreate = AIType.None;
+	[SerializeField] private AIType blackAiTypeToCreate = AIType.None;
+
 	[SerializeField]
 	private UCIEngineCustomSettings whiteUciEngineCustomSettings = null;
 	[SerializeField]
 	private UCIEngineCustomSettings blackUciEngineCustomSettings = null;
 
+	[SerializeField]
+	private UCIEngineCustomSettings minMaxDefaultSettings = null;
+	[SerializeField]
+	private UCIEngineCustomSettings mctsDefaultSettings = null;
+	
 	public void Start() {
 		VisualPiece.VisualPieceMoved += OnPieceMoved;
 
@@ -151,6 +161,44 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 	
 	public UCIEngineCustomSettings WhiteUciEngineCustomSettings { get => whiteUciEngineCustomSettings; set => whiteUciEngineCustomSettings = value; }
 	public UCIEngineCustomSettings BlackUciEngineCustomSettings { get => blackUciEngineCustomSettings; set => blackUciEngineCustomSettings = value; }
+	public AIType WhiteAiTypeToCreate { get => whiteAiTypeToCreate; set => whiteAiTypeToCreate = value; }
+	public AIType BlackAiTypeToCreate { get => blackAiTypeToCreate; set => blackAiTypeToCreate = value; }
+
+
+	private void CreateSelectedAIPlayer(ref IUCIEngine uciEngine, AIType aiType, Side side)
+	{
+
+		//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
+		//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
+		//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
+
+		UCIEngineCustomSettings selectedUCIEngineSettings = whiteUciEngineCustomSettings;
+		if(side == Side.Black)
+		{
+			selectedUCIEngineSettings = blackUciEngineCustomSettings; //TODO select approptiate settings based on AI type
+		}
+
+		switch (aiType)
+		{
+			case AIType.RandomAggressive:
+				uciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), side);
+				break;
+			case AIType.MinMax:
+				uciEngine = CreateAIPlayer(typeof(AI_MinMax), side, selectedUCIEngineSettings == null ? minMaxDefaultSettings : selectedUCIEngineSettings );
+				break;
+			case AIType.MCTS:
+				uciEngine = CreateAIPlayer(typeof(AI_MCTS), side, selectedUCIEngineSettings == null ? mctsDefaultSettings : selectedUCIEngineSettings);
+				break;
+			case AIType.ReinforcementLearning:
+				uciEngine = CreateAIPlayer(typeof(AI_MLAgent1), side);
+				break;
+			case AIType.None:
+			default:
+				throw new SystemException("No AIType assigned for: " + side);
+		}
+
+	}
+
 
 	/// <summary>
 	/// used when creating AI Players who are not customizable
@@ -233,6 +281,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		StartNewGame();
 	}
 
+	public void StartNewGameWithCurrentSettings()
+	{
+		StartNewGame(isWhiteAI, isBlackAI);
+	}
+
 #if AI_TEST
 	public async void StartNewGame(bool isWhiteAI = true, bool isBlackAI = true) {
 #elif WHITE_HUMAN_VS_AI
@@ -264,23 +317,24 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		if (isWhiteAI || isBlackAI) {
 			if (isWhiteAI)
 			{
-#if TRAIN_WHITE_AI
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+#if TRAIN_WHITE_AI || TRAIN_BOTH_AI
+				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
+				whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent2), Side.White);
 #elif TRAIN_BLACK_AI
 				whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
 #else
-				//whiteUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
-				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
-				//whiteUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.White);
-				//whiteUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.White);
-				//whiteUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.White, whiteUciEngineCustomSettings);
-				whiteUciEngine = CreateAIPlayer(typeof(AI_MCTS), Side.White, whiteUciEngineCustomSettings);
+				CreateSelectedAIPlayer(ref whiteUciEngine, whiteAiTypeToCreate, Side.White);
 #endif
+
+
 				if (whiteUciEngine.CanRequestRestart())
 				{
 					aiAgentsRequieredRequestsToStartNewGame += 1;
 				}
 				whiteUciEngine.Start();
+
+				
+
 				await whiteUciEngine.SetupNewGame(game, GameEndedEvent, HandleAIStartNewGameRequest);
 			}
 
@@ -288,15 +342,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			{
 #if TRAIN_WHITE_AI
 				blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngineRandom1), Side.Black);
-#elif TRAIN_BLACK_AI
-				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
-#else
-				//blackUciEngine = new MockUCIEngine(); // temporarily not use this, until I fix problem with conflicting IAsyncEnumerable<T> // need to figure out a neat way to pass the correct types somehow
-				//blackUciEngine = CreateAIPlayer(typeof(AI_UCIEngine1));
+#elif TRAIN_BLACK_AI || TRAIN_BOTH_AI
 				//blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent1), Side.Black);
-				//blackUciEngine = CreateAIPlayer(typeof(AI_MinMax), Side.Black, blackUciEngineCustomSettings);
-				blackUciEngine = CreateAIPlayer(typeof(AI_MCTS), Side.Black, blackUciEngineCustomSettings);
+				blackUciEngine = CreateAIPlayer(typeof(AI_MLAgent2), Side.Black);
+#else
+				CreateSelectedAIPlayer(ref blackUciEngine, blackAiTypeToCreate, Side.Black);
 #endif
+				
 				if (blackUciEngine.CanRequestRestart())
 				{
 					aiAgentsRequieredRequestsToStartNewGame += 1;
@@ -353,7 +405,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		} else {
 			BoardManager.Instance.EnsureOnlyPiecesOfSideAreEnabled(SideToMove);
 		}
-
 		MoveExecutedEvent?.Invoke();
 
 		return true;
@@ -512,5 +563,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 		gameStarting,
 		gameInProgress,
 		gameFinished
+	}
+
+	public enum AIType
+	{
+		None,
+		RandomAggressive,
+		MinMax,
+		MCTS,
+		ReinforcementLearning
 	}
 }

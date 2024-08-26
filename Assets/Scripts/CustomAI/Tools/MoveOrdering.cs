@@ -10,11 +10,8 @@ namespace UnityChess.StrategicAI.Tools
 										 // //https://www.chess.com/forum/view/general/max-number-of-movements//
 
 		const int million = 1000000;
-		const int hashMoveScore = 100 * million;
-		const int winningCaptureBias = 8 * million;
+		const int captureBias = 8 * million;
 		const int promoteBias = 6 * million;
-		const int killerBias = 4 * million;
-		const int losingCaptureBias = 2 * million;
 		const int regularBias = 0;
 		public List<Movement> OrderMoves(Board board, List<Movement> movements)
 		{
@@ -23,11 +20,6 @@ namespace UnityChess.StrategicAI.Tools
 
 				Movement move = movements[i];
 
-				//if (move.Equals(hashMove))
-				//{
-				//	moveScores[i] = hashMoveScore;
-				//	continue;
-				//}
 				int score = 0;
 				Square startSquare = move.Start;
 				Square targetSquare = move.End;
@@ -42,16 +34,7 @@ namespace UnityChess.StrategicAI.Tools
 					// Order movements to try capturing the most valuable opponent piece with least valuable of own pieces first
 					int captureMaterialDelta = AI_MinMax.GetPieceMaterialScore(capturePiece) - pieceValue;
 
-					score += winningCaptureBias + captureMaterialDelta;
-					//bool opponentCanRecapture = BitBoardUtility.ContainsSquare(oppPawnAttacks | oppAttacks, targetSquare);
-					//if (opponentCanRecapture)
-					//{
-					//	score += (captureMaterialDelta >= 0 ? winningCaptureBias : losingCaptureBias) + captureMaterialDelta;
-					//}
-					//else
-					//{
-					//	score += winningCaptureBias + captureMaterialDelta;
-					//}
+					score += captureBias + captureMaterialDelta;
 				}
 
 				if (movePiece is Pawn)
@@ -70,23 +53,11 @@ namespace UnityChess.StrategicAI.Tools
 					int fromScore = PiecePositionScoreTable.Read(movePiece, startSquare);
 					score += toScore - fromScore;
 
-					//if (BitBoardUtility.ContainsSquare(oppPawnAttacks, targetSquare))
-					//{
-					//	score -= 50;
-					//}
-					//else if (BitBoardUtility.ContainsSquare(oppAttacks, targetSquare))
-					//{
-					//	score -= 25;
-					//}
-
 				}
 
 				if (!isCapture)
 				{
 					score += regularBias;
-					//bool isKiller = !inQSearch && ply < maxKillerMovePly && killerMoves[ply].Match(move);
-					//score += isKiller ? killerBias : regularBias;
-					//score += History[board.MoveColourIndex, move.StartSquare, move.TargetSquare];
 				}
 
 				moveScores[i] = score;

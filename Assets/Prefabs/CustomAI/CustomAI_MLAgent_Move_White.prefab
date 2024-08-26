@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6401094795927459350}
   - component: {fileID: -8488251213591852674}
   m_Layer: 0
-  m_Name: CustomAI_MLAgent_White
+  m_Name: CustomAI_MLAgent_Move_White
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47,12 +47,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 64
+    VectorObservationSize: 71
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 0800000008000000080000000800000005000000
-    VectorActionSize: 0800000008000000080000000800000005000000
+      BranchSizes: 0800000008000000080000000800000004000000
+    VectorActionSize: 0800000008000000080000000800000004000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1

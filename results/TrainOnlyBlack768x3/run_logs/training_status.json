@@ -1,0 +1,29 @@
+{
+    "BlackMLAgent": {
+        "checkpoints": [
+            {
+                "steps": 8260,
+                "file_path": "results\\TrainOnlyBlack768x3\\BlackMLAgent\\BlackMLAgent-8260.onnx",
+                "reward": -999.6222222222223,
+                "creation_time": 1726498501.2302568,
+                "auxillary_file_paths": [
+                    "results\\TrainOnlyBlack768x3\\BlackMLAgent\\BlackMLAgent-8260.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 8260,
+            "file_path": "results\\TrainOnlyBlack768x3\\BlackMLAgent.onnx",
+            "reward": -999.6222222222223,
+            "creation_time": 1726498501.2302568,
+            "auxillary_file_paths": [
+                "results\\TrainOnlyBlack768x3\\BlackMLAgent\\BlackMLAgent-8260.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.11.0+cpu"
+    }
+}

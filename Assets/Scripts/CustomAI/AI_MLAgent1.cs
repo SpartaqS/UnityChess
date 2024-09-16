@@ -12,7 +12,7 @@ namespace UnityChess.StrategicAI
 {
 	public class AI_MLAgent1 : Agent,  IUCIEngine
 	{//TODO actually implement interfacing between Model and game
-		protected const bool keepTrainingAfterInvalidMove = true;
+		protected const bool keepTrainingAfterInvalidMove = false;
 		//protected const bool keepTrainingAfterInvalidMove = false;
 		protected Game game;
 		protected Movement selectedMovement = null;
